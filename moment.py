@@ -12,12 +12,16 @@ def moment_2(window):
     return window.flatten().std()
 
 def moment_3(window):
-    mean = window.flatten().mean()
-    temp = np.fromfunction(lambda x,y: (window[x,y] - mean) ** 3, window.shape, dtype=int).flatten().sum() / (window.shape[0] * window.shape[1])
-    if temp >= 0:
-        return temp ** 1/3
-    temp *= -1
-    return (temp ** 1/3) * -1
+    std = window.std()
+    if std == 0 or window.size == 0:
+        return 0
+    return np.power((window - window.mean()) / window.std(), 3).sum() / window.size
+    # mean = window.flatten().mean()
+    # temp = np.fromfunction(lambda x,y: (window[x,y] - mean) ** 3, window.shape, dtype=int).flatten().sum() / (window.shape[0] * window.shape[1])
+    # if temp >= 0:
+    #     return temp ** 1/3
+    # temp *= -1
+    # return (temp ** 1/3) * -1
 
 def img_moment(img, win_h, win_w):
     y, u, v = cv2.split(img)
@@ -45,3 +49,4 @@ def img_moment(img, win_h, win_w):
             v_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
 
     return y_mom_feat, u_mom_feat, v_mom_feat
+

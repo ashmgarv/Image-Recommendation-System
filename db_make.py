@@ -46,24 +46,6 @@ def build_db(data_path, coll_name, batch=1000):
             coll.insert_many(imgs)
             imgs.clear()
 
-    # Single threaded
-    # imgs = []
-    # for path in tqdm(paths):
-    #     imgs.append(process_img(path, win_h, win_w))
-    #     if len(imgs) % batch == 0:
-    #         coll.insert_many(imgs)
-    #         imgs.clear()
-
-    # parallel processing
-    # imgs = []
-    # with Pool(processes=10) as p:
-    #     with tqdm(total=len(paths)) as pbar:
-    #         for data in tqdm(p.imap_unordered(process_img, paths)):
-    #             imgs.append(data)
-    #             if len(imgs) % batch == 0:
-    #                 coll.insert_many(imgs)
-    #                 imgs.clear()
-
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()

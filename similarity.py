@@ -8,11 +8,7 @@ from pathlib import Path
 from pymongo import MongoClient
 from dynaconf import settings
 
-from jinja2 import Environment
-from jinja2.loaders import FileSystemLoader
-
-env = Environment(loader=FileSystemLoader('templates'))
-tmpl = env.get_template('op_temp.html')
+import output
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
@@ -74,17 +70,6 @@ def calc_mom_sim(img_path, k):
 
     return d[0:k]
 
-# s = timeit.default_timer()
-# ranks = calc_mom_sim("/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/Hand_0009720.jpg", 100)
-# e = timeit.default_timer()
-# print("Took {} to calculate".format(e - s))
-
-# s = timeit.default_timer()
-# f = open("op.html", "w")
-# f.write(tmpl.render(ranks=ranks, key="/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/Hand_0009720.jpg", title="TEST"))
-# e = timeit.default_timer()
-# print("Took {} to write".format(e - s))
-
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
@@ -101,12 +86,5 @@ if __name__ == "__main__":
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 
-    op_path = Path(settings.OUTPUT_PATH) / "{}.html".format(img_path.resolve().name)
-    s = timeit.default_timer()
-
-    f = open(op_path, "w")
-    f.write(tmpl.render(ranks=ranks, key=str(img_path), title="TEST"))
-
-    e = timeit.default_timer()
-    print("Took {} to write".format(e - s))
+    output.write_to_file("op_temp.html", "{}.html".format(img_path.resolve().name), ranks=ranks, key=str(img_path), title="TEST")
 

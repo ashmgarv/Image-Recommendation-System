@@ -22,9 +22,9 @@ def calc_mom_sim(img_path, k):
     coll = client.db[settings.MOMENT.COLLECTION]
 
     key_feats = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
-    k_y = np.array(key_feats["y_moments"], dtype=list)
-    k_u = np.array(key_feats["u_moments"], dtype=list)
-    k_v = np.array(key_feats["v_moments"], dtype=list)
+    k_y = np.array(key_feats["y_moments"])
+    k_u = np.array(key_feats["u_moments"])
+    k_v = np.array(key_feats["v_moments"])
 
     y_w = np.array([settings.MOMENT.W_Y_1, settings.MOMENT.W_Y_2, settings.MOMENT.W_Y_3])
     u_w = np.array([settings.MOMENT.W_U_1, settings.MOMENT.W_U_2, settings.MOMENT.W_U_3])
@@ -35,9 +35,9 @@ def calc_mom_sim(img_path, k):
     def image_index(rec):
         s = timeit.default_timer()
 
-        y = np.array(rec["y_moments"], dtype=list)
-        u = np.array(rec["u_moments"], dtype=list)
-        v = np.array(rec["v_moments"], dtype=list)
+        y = np.array(rec["y_moments"])
+        u = np.array(rec["u_moments"])
+        v = np.array(rec["v_moments"])
 
         d_y = np.absolute(k_y - y) * y_w
         d_u = np.absolute(k_u - u) * u_w

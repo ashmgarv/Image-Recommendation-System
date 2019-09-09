@@ -14,7 +14,7 @@ output_path = "../Outputs/"
     win_width = 100
 
   [default.moment]
-    collection = "img_moment"
+    collection = "img_moment_2"
     W_Y_1 = 3
     W_U_1 = 0.5
     W_V_1 = 0.5

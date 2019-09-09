@@ -3,6 +3,7 @@ import moment
 import cv2
 import numpy as np
 import argparse
+import pickle
 
 from pathlib import Path
 from pymongo import MongoClient
@@ -35,9 +36,9 @@ def calc_mom_sim(img_path, k):
     def image_index(rec):
         s = timeit.default_timer()
 
-        y = np.array(rec["y_moments"])
-        u = np.array(rec["u_moments"])
-        v = np.array(rec["v_moments"])
+        y = pickle.loads(rec["y_moments"])
+        u = pickle.loads(rec["u_moments"])
+        v = pickle.loads(rec["v_moments"])
 
         d_y = np.absolute(k_y - y) * y_w
         d_u = np.absolute(k_u - u) * u_w

@@ -7,6 +7,8 @@ from tqdm import tqdm, trange
 from multiprocessing import Pool
 
 from pymongo import MongoClient
+from bson.binary import Binary
+import pickle
 from pathlib import Path
 from dynaconf import settings
 
@@ -18,7 +20,11 @@ def prepare_parser():
     return parser
 
 def process_img(img_path):
-    return moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
+    res = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
+    res["y_moments"] = Binary(pickle.dumps(np.array(res["y_moments"]), protocol=2))
+    res["u_moments"] = Binary(pickle.dumps(np.array(res["u_moments"]), protocol=2))
+    res["v_moments"] = Binary(pickle.dumps(np.array(res["v_moments"]), protocol=2))
+    return res
 
 def build_moment_db(data_path, coll_name):
     if not data_path:

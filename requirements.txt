@@ -1,0 +1,6 @@
+dynaconf==2.1.0
+opencv_python==4.1.1.26
+pymongo==3.9.0
+Jinja2==2.10.1
+tqdm==4.35.0
+numpy==1.17.2

@@ -4,6 +4,7 @@ password = ""
 port = 27017
 host = "localhost"
 data_path = "/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/"
+output_path = "../Outputs/"
 
   [default.loader]
     batch_size = 1000
@@ -14,12 +15,12 @@ data_path = "/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/"
 
   [default.moment]
     collection = "img_moment"
-    W_Y_1 = 1
-    W_U_1 = 1
-    W_V_1 = 1
-    W_Y_2 = 1
-    W_U_2 = 1
-    W_V_2 = 1
-    W_Y_3 = 1
-    W_U_3 = 1
-    W_V_3 = 1
+    W_Y_1 = 3
+    W_U_1 = 0.5
+    W_V_1 = 0.5
+    W_Y_2 = 3
+    W_U_2 = 0.5
+    W_V_2 = 0.5
+    W_Y_3 = 3
+    W_U_3 = 0.5
+    W_V_3 = 0.5

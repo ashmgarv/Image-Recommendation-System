@@ -40,6 +40,9 @@ def build_moment_db(data_path, coll_name):
             coll.insert_many(imgs)
             imgs.clear()
 
+    if len(imgs) > 0:
+        coll.insert_many(imgs)
+
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()

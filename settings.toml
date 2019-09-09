@@ -3,7 +3,7 @@ username = ""
 password = ""
 port = 27017
 host = "localhost"
-data_path = "/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/"
+data_path = "../Data/Hands/"
 output_path = "../Outputs/"
 
   [default.loader]

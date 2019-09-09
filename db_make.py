@@ -8,31 +8,25 @@ from multiprocessing import Pool
 
 from pymongo import MongoClient
 from pathlib import Path
-
-WIN_H = 100
-WIN_W = 100
+from dynaconf import settings
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--window', type=str, required=True)
-    parser.add_argument('-p', '--data-path', type=str, required=True)
-    parser.add_argument('-b', '--batch-size', type=int, required=True)
-    parser.add_argument('-c', '--collection', type=str, required=True)
+    parser.add_argument('-m', '--model', type=str, required=True)
+    parser.add_argument('-d', '--data-path', type=str)
+    parser.add_argument('-c', '--collection', type=str)
     return parser
 
 def process_img(img_path):
-    img = cv2.imread(str(img_path))
-    img_yuv = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-    y, u, v = moment.img_moment(img_yuv, WIN_H, WIN_W)
-    return {
-        "path": str(img_path),
-        "y_moments": y,
-        "u_moments": u,
-        "v_moments": v
-    }
+    return moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
 
-def build_db(data_path, coll_name, batch=1000):
-    client = MongoClient('mongodb://localhost:27017/')
+def build_moment_db(data_path, coll_name):
+    if not data_path:
+        data_path = Path(settings.DATA_PATH)
+    if not coll_name:
+        coll_name = settings.MOMENT.COLLECTION
+
+    client = MongoClient(host=settings.HOST, port=settings.PORT, username=settings.USERNAME, password=settings.PASSWORD)
     coll = client.db[coll_name]
     paths = list(data_path.iterdir())
 
@@ -42,7 +36,7 @@ def build_db(data_path, coll_name, batch=1000):
     for img in p.imap_unordered(process_img, paths):
         imgs.append(img)
         pbar.update()
-        if len(imgs) % batch == 0:
+        if len(imgs) % settings.LOADER.BATCH_SIZE == 0:
             coll.insert_many(imgs)
             imgs.clear()
 
@@ -50,16 +44,11 @@ if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
 
-    try:
-        WIN_H, WIN_H = [int(x) for x in args.window.split(",")]
-    except:
-        raise Exception("Invalid argument to --window (-w). Must be of the format --window=<height>,<width>.")
-
-    path = Path(args.data_path)
-    if not path.exists() or not path.is_dir():
-        raise Exception("Invalid path provided.")
-
-    batch = args.batch_size
+    if args.data_path:
+        path = Path(args.data_path)
+        if (not path.exists() or not path.is_dir()):
+            raise Exception("Invalid path provided.")
     coll_name = args.collection
 
-    build_db(path, coll_name, batch)
+    if args.model == "moment":
+        build_moment_db(None if not args.data_path else path, None if not args.collection else coll_name)

@@ -1,0 +1,25 @@
+[default]
+username = ""
+password = ""
+port = 27017
+host = "localhost"
+data_path = "/home/amitab/Documents/MWDB Project/Phase 0/Data/Hands/"
+
+  [default.loader]
+    batch_size = 1000
+
+  [default.window]
+    win_height = 100
+    win_width = 100
+
+  [default.moment]
+    collection = "img_moment"
+    W_Y_1 = 1
+    W_U_1 = 1
+    W_V_1 = 1
+    W_Y_2 = 1
+    W_U_2 = 1
+    W_V_2 = 1
+    W_Y_3 = 1
+    W_U_3 = 1
+    W_V_3 = 1

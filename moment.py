@@ -50,3 +50,14 @@ def img_moment(img, win_h, win_w):
 
     return y_mom_feat, u_mom_feat, v_mom_feat
 
+def process_img(img_path, win_h, win_w):
+    img = cv2.imread(str(img_path))
+    img_yuv = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    y, u, v = img_moment(img_yuv, win_h, win_w)
+    return {
+        "path": str(img_path),
+        "y_moments": y,
+        "u_moments": u,
+        "v_moments": v
+    }
+

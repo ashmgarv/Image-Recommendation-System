@@ -26,6 +26,10 @@ def calc_mom_sim(img_path, k):
     k_u = np.array(key_feats["u_moments"], dtype=list)
     k_v = np.array(key_feats["v_moments"], dtype=list)
 
+    y_w = np.array([settings.MOMENT.W_Y_1, settings.MOMENT.W_Y_2, settings.MOMENT.W_Y_3])
+    u_w = np.array([settings.MOMENT.W_U_1, settings.MOMENT.W_U_2, settings.MOMENT.W_U_3])
+    v_w = np.array([settings.MOMENT.W_V_1, settings.MOMENT.W_V_2, settings.MOMENT.W_V_3])
+
     times = []
 
     def image_index(rec):
@@ -35,26 +39,13 @@ def calc_mom_sim(img_path, k):
         u = np.array(rec["u_moments"], dtype=list)
         v = np.array(rec["v_moments"], dtype=list)
 
-        tmp = np.absolute(k_y - y)
-        tmp[:,0] *= settings.MOMENT.W_Y_1
-        tmp[:,1] *= settings.MOMENT.W_Y_2
-        tmp[:,2] *= settings.MOMENT.W_Y_3
-        d_y = np.sum(tmp, axis=1)
+        d_y = np.absolute(k_y - y) * y_w
+        d_u = np.absolute(k_u - u) * u_w
+        d_v = np.absolute(k_v - v) * v_w
 
-        tmp = np.absolute(k_u - u)
-        tmp[:,0] *= settings.MOMENT.W_U_1
-        tmp[:,1] *= settings.MOMENT.W_U_2
-        tmp[:,2] *= settings.MOMENT.W_U_3
-        d_u = np.sum(tmp, axis=1)
-
-        tmp = np.absolute(k_v - v)
-        tmp[:,0] *= settings.MOMENT.W_V_1
-        tmp[:,1] *= settings.MOMENT.W_V_2
-        tmp[:,2] *= settings.MOMENT.W_V_3
-        d_v = np.sum(tmp, axis=1)
-
-        d = d_y + d_u + d_v
-        res = (rec["path"], d.mean(),)
+        div = d_y.shape[0]
+        d = d_y.flatten() + d_u.flatten() + d_v.flatten()
+        res = (rec["path"], d.sum() / div,)
 
         e = timeit.default_timer()
         times.append(e-s)

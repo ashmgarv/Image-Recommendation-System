@@ -8,6 +8,7 @@ from jinja2.loaders import FileSystemLoader
 
 env = Environment(loader=FileSystemLoader('templates'))
 
+
 def write_to_file(tmp, file_name, **kwargs):
     tmpl = env.get_template(tmp)
     op_path = Path(settings.OUTPUT_PATH) / file_name
@@ -18,4 +19,3 @@ def write_to_file(tmp, file_name, **kwargs):
 
     e = timeit.default_timer()
     print("Took {} to write".format(e - s))
-

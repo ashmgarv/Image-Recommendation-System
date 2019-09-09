@@ -5,23 +5,28 @@ import numpy as np
 #img_yuv = cv2.cvtColor(img_bgr, cv2.COLOR_RGB2YUV)
 #y,u,v=cv2.split(img_yuv)
 
+
 def moment_1(window):
     return window.flatten().mean()
 
+
 def moment_2(window):
     return window.flatten().std()
+
 
 def moment_3(window):
     std = window.std()
     if std == 0 or window.size == 0:
         return 0
-    return np.power((window - window.mean()) / window.std(), 3).sum() / window.size
+    return np.power(
+        (window - window.mean()) / window.std(), 3).sum() / window.size
     # mean = window.flatten().mean()
     # temp = np.fromfunction(lambda x,y: (window[x,y] - mean) ** 3, window.shape, dtype=int).flatten().sum() / (window.shape[0] * window.shape[1])
     # if temp >= 0:
     #     return temp ** 1/3
     # temp *= -1
     # return (temp ** 1/3) * -1
+
 
 def img_moment(img, win_h, win_w):
     y, u, v = cv2.split(img)
@@ -39,16 +44,17 @@ def img_moment(img, win_h, win_w):
             if j + win_w > img_w:
                 break
 
-            win = y[i:i+win_h, j:j+win_w]
+            win = y[i:i + win_h, j:j + win_w]
             y_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
 
-            win = u[i:i+win_h, j:j+win_w]
+            win = u[i:i + win_h, j:j + win_w]
             u_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
 
-            win = v[i:i+win_h, j:j+win_w]
+            win = v[i:i + win_h, j:j + win_w]
             v_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
 
     return y_mom_feat, u_mom_feat, v_mom_feat
+
 
 def process_img(img_path, win_h, win_w):
     img = cv2.imread(str(img_path))
@@ -60,4 +66,3 @@ def process_img(img_path, win_h, win_w):
         "u_moments": u,
         "v_moments": v
     }
-

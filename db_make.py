@@ -12,6 +12,7 @@ import pickle
 from pathlib import Path
 from dynaconf import settings
 
+
 def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
@@ -19,12 +20,18 @@ def prepare_parser():
     parser.add_argument('-c', '--collection', type=str)
     return parser
 
+
 def process_img(img_path):
-    res = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
-    res["y_moments"] = Binary(pickle.dumps(np.array(res["y_moments"]), protocol=2))
-    res["u_moments"] = Binary(pickle.dumps(np.array(res["u_moments"]), protocol=2))
-    res["v_moments"] = Binary(pickle.dumps(np.array(res["v_moments"]), protocol=2))
+    res = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT,
+                             settings.WINDOW.WIN_WIDTH)
+    res["y_moments"] = Binary(
+        pickle.dumps(np.array(res["y_moments"]), protocol=2))
+    res["u_moments"] = Binary(
+        pickle.dumps(np.array(res["u_moments"]), protocol=2))
+    res["v_moments"] = Binary(
+        pickle.dumps(np.array(res["v_moments"]), protocol=2))
     return res
+
 
 def build_moment_db(data_path, coll_name):
     if not data_path:
@@ -32,7 +39,10 @@ def build_moment_db(data_path, coll_name):
     if not coll_name:
         coll_name = settings.MOMENT.COLLECTION
 
-    client = MongoClient(host=settings.HOST, port=settings.PORT, username=settings.USERNAME, password=settings.PASSWORD)
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
     coll = client.db[coll_name]
     paths = list(data_path.iterdir())
 
@@ -49,6 +59,7 @@ def build_moment_db(data_path, coll_name):
     if len(imgs) > 0:
         coll.insert_many(imgs)
 
+
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
@@ -60,4 +71,5 @@ if __name__ == "__main__":
     coll_name = args.collection
 
     if args.model == "moment":
-        build_moment_db(None if not args.data_path else path, None if not args.collection else coll_name)
+        build_moment_db(None if not args.data_path else path,
+                        None if not args.collection else coll_name)

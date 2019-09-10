@@ -1,5 +1,6 @@
 import time
 import moment
+import sift
 import cv2
 import numpy as np
 import argparse
@@ -21,7 +22,7 @@ def prepare_parser():
     return parser
 
 
-def process_img(img_path):
+def process_moment_img(img_path):
     res = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT,
                              settings.WINDOW.WIN_WIDTH)
     res["y_moments"] = Binary(
@@ -32,12 +33,22 @@ def process_img(img_path):
         pickle.dumps(np.array(res["v_moments"]), protocol=2))
     return res
 
+def process_sift_img(img_path):
+    res = sift.process_img(img_path)
+    res['sift'] = Binary(pickle.dumps(res['sift']))
+    return res
 
-def build_moment_db(data_path, coll_name):
-    if not data_path:
+def build_db(model, data_path, coll_name):
+    if data_path is None:
         data_path = Path(settings.DATA_PATH)
-    if not coll_name:
-        coll_name = settings.MOMENT.COLLECTION
+
+    if coll_name is None:
+        if model == "moment":
+            coll_name = settings.MOMENT.COLLECTION
+        elif model == "sift":
+            coll_name = settings.SIFT.COLLECTION
+        else:
+            return
 
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
@@ -49,7 +60,15 @@ def build_moment_db(data_path, coll_name):
     imgs = []
     p = Pool(processes=10)
     pbar = tqdm(total=len(paths))
-    for img in p.imap_unordered(process_img, paths):
+
+    if model == "moment":
+        fun = process_moment_img
+    elif model == "sift":
+        fun = process_sift_img
+    else:
+        return
+
+    for img in p.imap_unordered(fun, paths):
         imgs.append(img)
         pbar.update()
         if len(imgs) % settings.LOADER.BATCH_SIZE == 0:
@@ -70,6 +89,6 @@ if __name__ == "__main__":
             raise Exception("Invalid path provided.")
     coll_name = args.collection
 
-    if args.model == "moment":
-        build_moment_db(None if not args.data_path else path,
-                        None if not args.collection else coll_name)
+    build_db(args.model,
+                    None if not args.data_path else path,
+                    None if not args.collection else coll_name)

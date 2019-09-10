@@ -6,6 +6,10 @@ host = "localhost"
 data_path = "../Data/Hands/"
 output_path = "../Outputs/"
 
+  [default.sift]
+    collection = "img_sift"
+    bin_path = "./bin/sift"
+
   [default.loader]
     batch_size = 1000
 

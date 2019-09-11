@@ -1,11 +1,10 @@
 import time
-import moment
-import sift
 import cv2
 import numpy as np
 import argparse
 from tqdm import tqdm, trange
 from multiprocessing import Pool
+from feature import moment, sift
 
 from pymongo import MongoClient
 from bson.binary import Binary

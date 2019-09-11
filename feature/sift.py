@@ -51,6 +51,13 @@ def img_sift(img_path):
     except Exception as e:
         raise Exception("Invalid output from sift binary: {}\n{}".format(e, out))
 
+# def img_sift(img_path):
+#      img = cv2.imread(str(img_path))
+#      img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+#      img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
+
+
+
 def process_img(img_path):
     return {
         "path": str(img_path),

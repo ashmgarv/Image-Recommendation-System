@@ -1,5 +1,4 @@
 import timeit
-import moment
 import cv2
 import numpy as np
 import argparse
@@ -8,6 +7,7 @@ import pickle
 from pathlib import Path
 from pymongo import MongoClient
 from dynaconf import settings
+from feature import moment, sift
 
 import output
 

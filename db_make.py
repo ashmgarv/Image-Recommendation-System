@@ -34,7 +34,7 @@ def process_moment_img(img_path):
 
 def process_sift_img(img_path):
     res = sift.process_img(img_path, bool(settings.SIFT.USE_OPENCV))
-    res['sift'] = Binary(pickle.dumps(res['sift']))
+    res['sift'][1] = Binary(pickle.dumps(res['sift'][1]))
     return res
 
 def build_db(model, data_path, coll_name):

@@ -1,3 +1,4 @@
+import timeit
 import utils
 import cv2
 import numpy as np
@@ -25,23 +26,32 @@ def parse_sift_op(out):
         tmp.extend([float(i) if '.' in i else int(i) for i in line.strip().split(" ")])
 
     if len(tmp) > 0:
-        keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
+        # keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
+        keys.append((tmp[1], tmp[0], tmp[2], tmp[3],))
         desc.append(tmp[4:])
 
     if len(keys) != keypoints:
         raise Exception("Expected {} keypoints, got {}".format(keypoints, len(keys)))
-    return (keys, np.array(desc),)
+    return [keys, np.array(desc)]
 
-def img_sift(img_path, use_opencv):
+def img_sift(img_path, sift_opencv):
     # TODO: Resize image?
     # sift binary does not ally images having > 1800 pixels in any dimension.
     # Also we have to maintain aspect ratio.
-    img = cv2.imread(str(img_path))
-    img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-    if use_opencv:
-        sift = cv2.xfeatures2d.SIFT_create()
-        return sift.detectAndCompute(img_gray, None)
+    # img = cv2.imread(str(img_path))
+    # img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    img_gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
+
+    if sift_opencv:
+        # sift = cv2.xfeatures2d.SIFT_create()
+        # res = sift.detectAndCompute(img_gray, None)
+        res = sift_opencv.detectAndCompute(img_gray, None)
+        # cv2.KeyPoint cannot be pickled. So multiprocessing with this is not
+        # possible
+        res = [[(i.pt[0], i.pt[1], i.size, i.angle,) for i in res[0]], res[1]]
+        # res = [res[0], res[1]]
+        return res
 
     img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
 
@@ -59,7 +69,38 @@ def img_sift(img_path, use_opencv):
 
 def process_img(img_path, use_opencv):
     return {
-        "path": str(img_path),
-        "sift": img_sift(str(img_path), use_opencv)
-    }
+            "path": str(img_path),
+            "sift": img_sift(str(img_path), cv2.xfeatures2d.SIFT_create() if use_opencv else None)
+            }
 
+def find_nearest_kps(kps, kp):
+    best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
+    # return best_two[1]/best_two[0] >= 1.5
+    return 10 * 10 * best_two[0] < 6 * 6 * best_two[1]
+
+# Compare img2 to img1
+# Returns the score of match for img1
+def compare_one(img1, img2):
+    # For each keypoint in img2, we look for the top two closest keypoints in
+    # img1. Then using a threshold, we either accept a match, or reject the
+    # match.
+    res = [1 for i in range(0, len(img2['sift'][1])) if find_nearest_kps(img1['sift'][1], img2['sift'][1][i]) == True]
+    return (img1['path'], sum(res))
+
+def compare_many(imgs, img):
+    times = []
+
+    def compare_one(img1, img2):
+        s = timeit.default_timer()
+        res = [1 for i in range(0, len(img2['sift'][1])) if find_nearest_kps(img1['sift'][1], img2['sift'][1][i]) == True]
+        e = timeit.default_timer()
+        times.append(e-s)
+        return (img1['path'], sum(res))
+
+    res = np.array([compare_one(i, img) for i in imgs], dtype=[('x', object), ('y', float)])
+
+    times = np.array(times)
+    print("Took AVG {} for each comparision".format(times.mean()))
+    print("Took Total {} for all comparisions".format(times.sum()))
+
+    return res

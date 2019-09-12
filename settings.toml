@@ -9,6 +9,7 @@ output_path = "../Outputs/"
   [default.sift]
     collection = "img_sift"
     bin_path = "./bin/sift"
+    use_opencv = 1
 
   [default.loader]
     batch_size = 1000

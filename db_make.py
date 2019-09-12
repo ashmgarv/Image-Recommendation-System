@@ -33,7 +33,7 @@ def process_moment_img(img_path):
     return res
 
 def process_sift_img(img_path):
-    res = sift.process_img(img_path)
+    res = sift.process_img(img_path, bool(settings.SIFT.USE_OPENCV))
     res['sift'] = Binary(pickle.dumps(res['sift']))
     return res
 

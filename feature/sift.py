@@ -9,34 +9,40 @@ def parse_sift_op(out):
     keypoints, var = (int(i) for i in data[0].split(" "))
     data = data[1:]
 
-    keys = []
     tmp = []
+    keys = []
+    desc = []
     for line in data:
         if len(line.strip()) == 0:
             continue
         if not line.startswith(" "):
             if len(tmp) == var + 4:
-                keys.append(tmp)
+                keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
+                desc.append(tmp[4:])
             elif len(keys) != 0:
                 raise Exception("Expected {} sized vector, got {}".format(var + 4, len(tmp)))
             tmp = []
         tmp.extend([float(i) if '.' in i else int(i) for i in line.strip().split(" ")])
 
     if len(tmp) > 0:
-        keys.append(tmp)
+        keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
+        desc.append(tmp[4:])
 
     if len(keys) != keypoints:
         raise Exception("Expected {} keypoints, got {}".format(keypoints, len(keys)))
+    return (keys, np.array(desc),)
 
-    return keys
-
-def img_sift(img_path):
+def img_sift(img_path, use_opencv):
     # TODO: Resize image?
     # sift binary does not ally images having > 1800 pixels in any dimension.
     # Also we have to maintain aspect ratio.
-
     img = cv2.imread(str(img_path))
     img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+    if use_opencv:
+        sift = cv2.xfeatures2d.SIFT_create()
+        return sift.detectAndCompute(img_gray, None)
+
     img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
 
     ret, out, err = utils.talk([settings.SIFT.BIN_PATH], settings._root_path, stdin=img_data, stdout=True)
@@ -47,20 +53,13 @@ def img_sift(img_path):
         raise Exception("Error occured: {}".format(err))
 
     try:
-        return np.array(parse_sift_op(out))
+        return parse_sift_op(out)
     except Exception as e:
         raise Exception("Invalid output from sift binary: {}\n{}".format(e, out))
 
-# def img_sift(img_path):
-#      img = cv2.imread(str(img_path))
-#      img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-#      img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
-
-
-
-def process_img(img_path):
+def process_img(img_path, use_opencv):
     return {
         "path": str(img_path),
-        "sift": img_sift(str(img_path))
+        "sift": img_sift(str(img_path), use_opencv)
     }
 

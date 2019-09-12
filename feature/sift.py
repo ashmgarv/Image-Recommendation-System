@@ -5,6 +5,16 @@ import numpy as np
 
 from dynaconf import settings
 
+import copyreg
+
+# Taken from https://stackoverflow.com/a/48832618
+# Adds support to pickle cv2.KeyPoint objects
+def _pickle_keypoints(point):
+    return cv2.KeyPoint, (*point.pt, point.size, point.angle,
+                          point.response, point.octave, point.class_id)
+
+copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoints)
+
 def parse_sift_op(out):
     data = out.split("\n")
     keypoints, var = (int(i) for i in data[0].split(" "))
@@ -26,8 +36,8 @@ def parse_sift_op(out):
         tmp.extend([float(i) if '.' in i else int(i) for i in line.strip().split(" ")])
 
     if len(tmp) > 0:
-        # keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
-        keys.append((tmp[1], tmp[0], tmp[2], tmp[3],))
+        keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
+        # keys.append((tmp[1], tmp[0], tmp[2], tmp[3],))
         desc.append(tmp[4:])
 
     if len(keys) != keypoints:
@@ -49,8 +59,8 @@ def img_sift(img_path, sift_opencv):
         res = sift_opencv.detectAndCompute(img_gray, None)
         # cv2.KeyPoint cannot be pickled. So multiprocessing with this is not
         # possible
-        res = [[(i.pt[0], i.pt[1], i.size, i.angle,) for i in res[0]], res[1]]
-        # res = [res[0], res[1]]
+        # res = [[(i.pt[0], i.pt[1], i.size, i.angle,) for i in res[0]], res[1]]
+        res = [res[0], res[1]]
         return res
 
     img_data = cv2.imencode(".pgm", img_gray)[1].tostring()

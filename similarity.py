@@ -19,6 +19,39 @@ def prepare_parser():
     parser.add_argument('-i', '--image', type=str, required=True)
     return parser
 
+def find_nearest_kps(kps, kp):
+    best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
+    # return best_two[1]/best_two[0] >= 1.5
+    return 10 * 10 * best_two[0] < 6 * 6 * best_two[1]
+
+def calc_sift_sim(img_path, k):
+    img_data = sift.process_img(str(img_path), True)
+
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll = client.db[settings.SIFT.COLLECTION]
+
+    times = []
+    def compare_one(img1, img2):
+        s = timeit.default_timer()
+
+        img1['sift'] = pickle.loads(img1['sift'])
+        res = [1 for i in range(0, len(img2['sift'][1])) if find_nearest_kps(img1['sift'][1], img2['sift'][1][i]) == True]
+
+        e = timeit.default_timer()
+        times.append(e-s)
+        return (img1['path'], sum(res))
+
+    res = np.array([compare_one(i, img_data) for i in coll.find()], dtype=[('x', object), ('y', float)])
+    res.sort(order="y")
+
+    times = np.array(times)
+    print("Took AVG {} for each comparision".format(times.mean()))
+    print("Took Total {} for all comparisions".format(times.sum()))
+
+    return np.flip(res[-1 * k:])
 
 def calc_mom_sim(img_path, k):
     client = MongoClient(host=settings.HOST,
@@ -89,7 +122,14 @@ if __name__ == "__main__":
         raise Exception("Need k > 0")
 
     s = timeit.default_timer()
-    ranks = calc_mom_sim(str(img_path), args.k_nearest)
+
+    if args.model == "moment":
+        ranks = calc_mom_sim(str(img_path), args.k_nearest)
+    elif args.model == "sift":
+        ranks = calc_sift_sim(str(img_path), args.k_nearest)
+    else:
+        raise Exception("Invalid model selected.")
+
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 

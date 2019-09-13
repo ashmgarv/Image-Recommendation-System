@@ -4,8 +4,10 @@ import cv2
 import numpy as np
 
 from dynaconf import settings
+from pymongo import MongoClient
 
 import copyreg
+import pickle
 
 # Taken from https://stackoverflow.com/a/48832618
 # Adds support to pickle cv2.KeyPoint objects
@@ -84,7 +86,12 @@ def process_img(img_path, use_opencv):
             }
 
 def find_nearest_kps(kps, kp):
-    best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
+    try:
+        best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
+    except:
+        import pdb
+        pdb.set_trace()
+        pass
     # return best_two[1]/best_two[0] >= 1.5
     return 10 * 10 * best_two[0] < 6 * 6 * best_two[1]
 
@@ -101,6 +108,7 @@ def compare_many(imgs, img):
     times = []
 
     def compare_one(img1, img2):
+        img1['sift'] = pickle.loads(img1['sift'])
         s = timeit.default_timer()
         res = [1 for i in range(0, len(img2['sift'][1])) if find_nearest_kps(img1['sift'][1], img2['sift'][1][i]) == True]
         e = timeit.default_timer()
@@ -114,3 +122,21 @@ def compare_many(imgs, img):
     print("Took Total {} for all comparisions".format(times.sum()))
 
     return res
+
+def similarity(img_path, k):
+    img_data = process_img(str(img_path), True)
+
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll = client.db[settings.SIFT.COLLECTION]
+
+    data = list(coll.find())
+    d = np.array(
+        compare_many(data, img_data),
+        dtype=[('x', object), ('y', float)])
+    d.sort(order="y")
+
+    return d[-1 * k:]
+

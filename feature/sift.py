@@ -140,3 +140,10 @@ def similarity(img_path, k):
 
     return d[-1 * k:]
 
+def visualize_sift(img_path, op_path):
+    img = cv2.imread(str(img_path))
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    sift = cv2.xfeatures2d.SIFT_create()
+    kp = sift.detectAndCompute(gray, None)
+    img = cv2.drawKeypoints(gray, kp[0], img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imwrite(str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)

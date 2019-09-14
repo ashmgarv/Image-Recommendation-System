@@ -94,7 +94,7 @@ def visualize_yuv(img_path, op_path):
 
     cv2.imwrite(str(op_path / '{}_yuv.png'.format(img_path.resolve().name)), result)
 
-def visualize_moments(img_path, op_path):
+def visualize_moments(img_path, op_path, win_h, win_w):
     img = cv2.imread(str(img_path))
     img_h, img_w, chans = img.shape
 
@@ -107,20 +107,19 @@ def visualize_moments(img_path, op_path):
 
     lut_u, lut_v = make_lut_u(), make_lut_v()
 
-    for i in range(0, img_h, 100):
-        if i + 100 > img_h:
+    for i in range(0, img_h, win_h):
+        if i + win_h > img_h:
             break
-        for j in range(0, img_w, 100):
-            if j + 100 > img_w:
+        for j in range(0, img_w, win_w):
+            if j + win_w > img_w:
                 break
 
-            win_y = y[i:i + 100, j:j + 100]
-            win_u = u[i:i + 100, j:j + 100]
-            win_v = v[i:i + 100, j:j + 100]
-            # y_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
-            img_y[i:i + 100, j:j + 100] = [moment_1(win_y), moment_2(win_y), moment_3(win_y)]
-            img_u[i:i + 100, j:j + 100] = [moment_1(win_u), moment_2(win_u), moment_3(win_u)]
-            img_v[i:i + 100, j:j + 100] = [moment_1(win_v), moment_2(win_v), moment_3(win_v)]
+            win_y = y[i:i + win_h, j:j + win_w]
+            win_u = u[i:i + win_h, j:j + win_w]
+            win_v = v[i:i + win_h, j:j + win_w]
+            img_y[i:i + win_h, j:j + win_w] = [moment_1(win_y), moment_2(win_y), moment_3(win_y)]
+            img_u[i:i + win_h, j:j + win_w] = [moment_1(win_u), moment_2(win_u), moment_3(win_u)]
+            img_v[i:i + win_h, j:j + win_w] = [moment_1(win_v), moment_2(win_v), moment_3(win_v)]
 
     result_y = np.vstack([cv2.cvtColor(y, cv2.COLOR_GRAY2BGR)] + [cv2.cvtColor(i, cv2.COLOR_GRAY2BGR) for i in cv2.split(img_y)])
     result_u = np.vstack([cv2.LUT(cv2.cvtColor(u, cv2.COLOR_GRAY2BGR), lut_u)] + [cv2.LUT(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR), lut_u) for i in cv2.split(img_u)])

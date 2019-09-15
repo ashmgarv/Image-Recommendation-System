@@ -25,7 +25,7 @@ def find_nearest_kps(kps, kp):
     return 10 * 10 * best_two[0] < 6 * 6 * best_two[1]
 
 def calc_sift_sim(img_path, k):
-    img_data = sift.process_img(str(img_path), True)
+    img_data = sift.process_img(str(img_path.resolve()), True)
 
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
@@ -60,7 +60,7 @@ def calc_mom_sim(img_path, k):
                          password=settings.PASSWORD)
     coll = client.db[settings.MOMENT.COLLECTION]
 
-    key_feats = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT,
+    key_feats = moment.process_img(str(img_path.resolve()), settings.WINDOW.WIN_HEIGHT,
                                    settings.WINDOW.WIN_WIDTH)
     k_y = np.array(key_feats["y_moments"])
     k_u = np.array(key_feats["u_moments"])
@@ -124,9 +124,9 @@ if __name__ == "__main__":
     s = timeit.default_timer()
 
     if args.model == "moment":
-        ranks = calc_mom_sim(str(img_path), args.k_nearest)
+        ranks = calc_mom_sim(img_path, args.k_nearest)
     elif args.model == "sift":
-        ranks = calc_sift_sim(str(img_path), args.k_nearest)
+        ranks = calc_sift_sim(img_path, args.k_nearest)
     else:
         raise Exception("Invalid model selected.")
 

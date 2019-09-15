@@ -22,7 +22,7 @@ def prepare_parser():
 
 
 def process_moment_img(img_path):
-    res = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT,
+    res = moment.process_img(img_path.resolve(), settings.WINDOW.WIN_HEIGHT,
                              settings.WINDOW.WIN_WIDTH)
     res["y_moments"] = Binary(
         pickle.dumps(np.array(res["y_moments"]), protocol=2))
@@ -33,7 +33,7 @@ def process_moment_img(img_path):
     return res
 
 def process_sift_img(img_path):
-    res = sift.process_img(img_path, bool(settings.SIFT.USE_OPENCV))
+    res = sift.process_img(img_path.resolve(), bool(settings.SIFT.USE_OPENCV))
     res['sift'] = Binary(pickle.dumps(res['sift']))
     return res
 

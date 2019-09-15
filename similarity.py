@@ -14,12 +14,14 @@ import output
 from tqdm import tqdm, trange
 from multiprocessing import Pool
 
+
 def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
     parser.add_argument('-k', '--k-nearest', type=int, required=True)
     parser.add_argument('-i', '--image', type=str, required=True)
     return parser
+
 
 def calc_sim(img_path, k, model):
     client = MongoClient(host=settings.HOST,
@@ -29,7 +31,17 @@ def calc_sim(img_path, k, model):
 
     if model == "moment":
         coll = client.db[settings.MOMENT.COLLECTION]
-        c = CompareMoment(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH, [settings.MOMENT.W_Y_1, settings.MOMENT.W_Y_2, settings.MOMENT.W_Y_3], [settings.MOMENT.W_U_1, settings.MOMENT.W_U_2, settings.MOMENT.W_U_3], [settings.MOMENT.W_V_1, settings.MOMENT.W_V_2, settings.MOMENT.W_V_3])
+        c = CompareMoment(img_path, settings.WINDOW.WIN_HEIGHT,
+                          settings.WINDOW.WIN_WIDTH, [
+                              settings.MOMENT.W_Y_1, settings.MOMENT.W_Y_2,
+                              settings.MOMENT.W_Y_3
+                          ], [
+                              settings.MOMENT.W_U_1, settings.MOMENT.W_U_2,
+                              settings.MOMENT.W_U_3
+                          ], [
+                              settings.MOMENT.W_V_1, settings.MOMENT.W_V_2,
+                              settings.MOMENT.W_V_3
+                          ])
     elif model == "sift":
         coll = client.db[settings.SIFT.COLLECTION]
         c = CompareSift(img_path, bool(settings.SIFT.USE_OPENCV))
@@ -49,6 +61,7 @@ def calc_sim(img_path, k, model):
         return res[0:k]
     elif model == "sift":
         return np.flip(res[-1 * k:])
+
 
 if __name__ == "__main__":
     parser = prepare_parser()

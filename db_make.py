@@ -32,10 +32,12 @@ def process_moment_img(img_path):
         pickle.dumps(np.array(res["v_moments"]), protocol=2))
     return res
 
+
 def process_sift_img(img_path):
     res = sift.process_img(img_path.resolve(), bool(settings.SIFT.USE_OPENCV))
     res['sift'] = Binary(pickle.dumps(res['sift']))
     return res
+
 
 def build_db(model, data_path, coll_name):
     if data_path is None:
@@ -88,6 +90,5 @@ if __name__ == "__main__":
             raise Exception("Invalid path provided.")
     coll_name = args.collection
 
-    build_db(args.model,
-                    None if not args.data_path else path,
-                    None if not args.collection else coll_name)
+    build_db(args.model, None if not args.data_path else path,
+             None if not args.collection else coll_name)

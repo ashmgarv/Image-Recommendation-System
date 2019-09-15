@@ -9,13 +9,16 @@ from pymongo import MongoClient
 import copyreg
 import pickle
 
+
 # Taken from https://stackoverflow.com/a/48832618
 # Adds support to pickle cv2.KeyPoint objects
 def _pickle_keypoints(point):
-    return cv2.KeyPoint, (*point.pt, point.size, point.angle,
-                          point.response, point.octave, point.class_id)
+    return cv2.KeyPoint, (*point.pt, point.size, point.angle, point.response,
+                          point.octave, point.class_id)
+
 
 copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoints)
+
 
 def parse_sift_op(out):
     data = out.split("\n")
@@ -33,9 +36,11 @@ def parse_sift_op(out):
                 keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
                 desc.append(tmp[4:])
             elif len(keys) != 0:
-                raise Exception("Expected {} sized vector, got {}".format(var + 4, len(tmp)))
+                raise Exception("Expected {} sized vector, got {}".format(
+                    var + 4, len(tmp)))
             tmp = []
-        tmp.extend([float(i) if '.' in i else int(i) for i in line.strip().split(" ")])
+        tmp.extend(
+            [float(i) if '.' in i else int(i) for i in line.strip().split(" ")])
 
     if len(tmp) > 0:
         keys.append(cv2.KeyPoint(tmp[1], tmp[0], tmp[2], tmp[3]))
@@ -43,8 +48,10 @@ def parse_sift_op(out):
         desc.append(tmp[4:])
 
     if len(keys) != keypoints:
-        raise Exception("Expected {} keypoints, got {}".format(keypoints, len(keys)))
+        raise Exception("Expected {} keypoints, got {}".format(
+            keypoints, len(keys)))
     return [keys, np.array(desc)]
+
 
 def img_sift(img_path, sift_opencv):
     # TODO: Resize image?
@@ -67,8 +74,12 @@ def img_sift(img_path, sift_opencv):
 
     img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
 
-    ret, out, err = utils.talk([settings.SIFT.BIN_PATH], settings._root_path, stdin=img_data, stdout=True)
-    if err.startswith("Finding keypoints") and err.endswith("keypoints found.\n"):
+    ret, out, err = utils.talk([settings.SIFT.BIN_PATH],
+                               settings._root_path,
+                               stdin=img_data,
+                               stdout=True)
+    if err.startswith("Finding keypoints") and err.endswith(
+            "keypoints found.\n"):
         err = None
 
     if ret != 0 or err != None:
@@ -77,23 +88,35 @@ def img_sift(img_path, sift_opencv):
     try:
         return parse_sift_op(out)
     except Exception as e:
-        raise Exception("Invalid output from sift binary: {}\n{}".format(e, out))
+        raise Exception("Invalid output from sift binary: {}\n{}".format(
+            e, out))
+
 
 def process_img(img_path, use_opencv):
     return {
-            "path": str(img_path),
-            "sift": img_sift(str(img_path), cv2.xfeatures2d.SIFT_create() if use_opencv else None)
-            }
+        "path":
+            str(img_path),
+        "sift":
+            img_sift(str(img_path),
+                     cv2.xfeatures2d.SIFT_create() if use_opencv else None)
+    }
+
 
 def visualize_sift(img_path, op_path):
     img = cv2.imread(str(img_path))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     sift = cv2.xfeatures2d.SIFT_create()
     kp = sift.detectAndCompute(gray, None)
-    img = cv2.drawKeypoints(gray, kp[0], img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imwrite(str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
+    img = cv2.drawKeypoints(gray,
+                            kp[0],
+                            img,
+                            flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imwrite(
+        str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
+
 
 class CompareSift(object):
+
     def __init__(self, img_path, use_opencv):
         self.img_path = img_path
         self.img_data = process_img(str(img_path.resolve()), use_opencv)
@@ -104,7 +127,10 @@ class CompareSift(object):
 
     def compare_one(self, img1):
         img1['sift'] = pickle.loads(img1['sift'])
-        res = [1 for i in range(0, len(self.img_data['sift'][1])) if self.find_nearest_kps(img1['sift'][1], self.img_data['sift'][1][i]) == True]
+        res = [
+            1 for i in range(0, len(self.img_data['sift'][1]))
+            if self.find_nearest_kps(img1['sift'][1], self.img_data['sift'][1]
+                                     [i]) == True
+        ]
 
         return (img1['path'], sum(res))
-

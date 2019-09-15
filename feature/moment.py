@@ -1,10 +1,6 @@
 import cv2
 import numpy as np
-
-#img_bgr = cv2.imread("/home/amitab/Documents/MWDB Project/Phase 0/mia-khalifa.jpg")
-#img_yuv = cv2.cvtColor(img_bgr, cv2.COLOR_RGB2YUV)
-#y,u,v=cv2.split(img_yuv)
-
+import pickle
 
 def moment_1(window):
     return window.flatten().mean()
@@ -127,3 +123,33 @@ def visualize_moments(img_path, op_path, win_h, win_w):
     cv2.imwrite(str(op_path / '{}_y.png'.format(img_path.resolve().name)), result_y)
     cv2.imwrite(str(op_path / '{}_u.png'.format(img_path.resolve().name)), result_u)
     cv2.imwrite(str(op_path / '{}_v.png'.format(img_path.resolve().name)), result_v)
+
+class CompareMoment(object):
+    def __init__(self, img_path, win_h, win_w, y_w, u_w, v_w):
+        self.key_feats = process_img(str(img_path.resolve()), win_h, win_w)
+        self.k_y = np.array(self.key_feats["y_moments"])
+        self.k_u = np.array(self.key_feats["u_moments"])
+        self.k_v = np.array(self.key_feats["v_moments"])
+
+        self.y_w = np.array(y_w)
+        self.u_w = np.array(u_w)
+        self.v_w = np.array(v_w)
+
+    def compare_one(self, rec):
+        y = pickle.loads(rec["y_moments"])
+        u = pickle.loads(rec["u_moments"])
+        v = pickle.loads(rec["v_moments"])
+
+        d_y = np.absolute(self.k_y - y) * self.y_w
+        d_u = np.absolute(self.k_u - u) * self.u_w
+        d_v = np.absolute(self.k_v - v) * self.v_w
+
+        div = d_y.shape[0]
+        d = d_y.flatten() + d_u.flatten() + d_v.flatten()
+        res = (
+            rec["path"],
+            d.sum() / div,
+        )
+
+        return res
+

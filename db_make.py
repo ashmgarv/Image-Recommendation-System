@@ -40,6 +40,14 @@ def process_sift_img(img_path):
 
 
 def build_db(model, data_path, coll_name):
+    """
+    Extracts features from all the images given in the dataset and stores it in the Database
+
+    Args:
+        model: The model to use. This dictates the features to be extracted from the images.
+        data_path: Path of the dataset.
+        coll_name: Collection name in which to store data.
+    """
     if data_path is None:
         data_path = Path(settings.DATA_PATH)
 

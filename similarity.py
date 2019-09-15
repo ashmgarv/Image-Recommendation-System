@@ -24,6 +24,14 @@ def prepare_parser():
 
 
 def calc_sim(img_path, k, model):
+    """
+    Find the top k similar images from the database to the provided input image.
+
+    Args:
+        img_path: Path of the input image.
+        k: The number of matches to be selected.
+        model: The model to be used for matching.
+    """
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
@@ -80,7 +88,7 @@ if __name__ == "__main__":
     print("Took {} to calculate".format(e - s))
 
     output.write_to_file("op_temp.html",
-                         "{}.html".format(img_path.resolve().name),
+                         "{}-{}.html".format(img_path.resolve().name, args.model),
                          ranks=ranks,
                          key=str(img_path),
                          title="TEST")

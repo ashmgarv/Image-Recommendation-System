@@ -21,6 +21,15 @@ copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoints)
 
 
 def parse_sift_op(out):
+    """
+    Parses the sift output from the SIFT binary provided by David Lowe.
+
+    Args:
+        out: The output of the SIFT binary
+
+    Returns:
+        An array of cv2.Keypoint and list of descriptors associated with each keypoint.
+    """
     data = out.split("\n")
     keypoints, var = (int(i) for i in data[0].split(" "))
     data = data[1:]
@@ -54,6 +63,16 @@ def parse_sift_op(out):
 
 
 def img_sift(img_path, sift_opencv):
+    """
+    Extracts the SIFT keypoints from a provided image.
+
+    Args:
+        img_path: The given image to operate on.
+        sift_opencv: An instance of OpenCV's sift. If not provided, the application will fallback to the SIFT binary by David Lowe.
+
+    Returns:
+        An array of cv2.KeyPoint and list of descriptors associated with each keypoint.
+    """
     # TODO: Resize image?
     # sift binary does not ally images having > 1800 pixels in any dimension.
     # Also we have to maintain aspect ratio.
@@ -103,6 +122,13 @@ def process_img(img_path, use_opencv):
 
 
 def visualize_sift(img_path, op_path):
+    """
+    Draws the keypoints on the image and writes the image on the disk.
+
+    Args:
+        img_path: The image who's SIFT features are to be visualized.
+        op_path: Path to write the output image.
+    """
     img = cv2.imread(str(img_path))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     sift = cv2.xfeatures2d.SIFT_create()
@@ -122,10 +148,29 @@ class CompareSift(object):
         self.img_data = process_img(str(img_path.resolve()), use_opencv)
 
     def find_nearest_kps(self, kps, kp):
+        """
+        Finds the two nearest keypoints from kps to the keypoint kp. This function implements the ratio check to eliminate ambigious matches.
+
+        Args:
+            kps: List of keypoints in which to find a match.
+            kp: The keypoint who's neighbours are required.
+
+        Returns:
+            True if there is a suitable keypoint matching kp, False otherwise.
+        """
         best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
         return 10 * 10 * best_two[0] < 8 * 8 * best_two[1]
 
     def compare_one(self, img1):
+        """
+        Compares self.img_data to img1. This function find the number of matching keypoints from self.img_data to img1.
+
+        Args:
+            img1: The SIFT features of the image to be compared to.
+
+        Returns:
+            A tuple of the image path of img1 and the number of matches.
+        """
         img1['sift'] = pickle.loads(img1['sift'])
         res = [
             1 for i in range(0, len(self.img_data['sift'][1]))

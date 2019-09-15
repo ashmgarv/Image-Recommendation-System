@@ -6,6 +6,13 @@ import argparse
 
 
 def describe(img_path, model):
+    """
+    Displays the raw features extracted from an image.
+
+    Args:
+        img_path: The image who's features need to be visualized.
+        model: The model to use to extract features from the image.
+    """
     if model == "moment":
         data = moment.process_img(img_path, settings.WINDOW.WIN_HEIGHT,
                                   settings.WINDOW.WIN_WIDTH)
@@ -16,6 +23,13 @@ def describe(img_path, model):
 
 
 def visualize(img_path, model):
+    """
+    Visualizes the features in images.
+
+    Args:
+        img_path: The image who's features need to be visualized.
+        model: The model to use to extract features from the image.
+    """
     if model == "moment":
         moment.visualize_yuv(img_path, Path(settings.OUTPUT_PATH))
         moment.visualize_moments(img_path, Path(settings.OUTPUT_PATH),

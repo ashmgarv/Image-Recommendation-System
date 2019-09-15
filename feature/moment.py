@@ -4,14 +4,41 @@ import pickle
 
 
 def moment_1(window):
+    """
+    Calculates the first Moment of the given image window.
+
+    Args:
+        window: An m x n numpy matrix.
+
+    Returns:
+        The mean of the color distribution in the given window.
+    """
     return window.flatten().mean()
 
 
 def moment_2(window):
+    """
+    Calculates the second Moment of the given image window.
+
+    Args:
+        window: An m x n numpy matrix.
+
+    Returns:
+        The standard deviation of the color distribution in the given window.
+    """
     return window.flatten().std()
 
 
 def moment_3(window):
+    """
+    Calculates the third Moment of the given image window.
+
+    Args:
+        window: An m x n numpy matrix.
+
+    Returns:
+        The skewness of the color distribution in the given window.
+    """
     std = window.std()
     if std == 0 or window.size == 0:
         return 0
@@ -26,6 +53,17 @@ def moment_3(window):
 
 
 def img_moment(img, win_h, win_w):
+    """
+    Divides the image into windows of win_h x win_w and calculates the three moments for each of these windows.
+
+    Args:
+        img: The image read by cv2 in YUV format.
+        win_h: The height of the window to split img.
+        win_w: The width of the window to split img.
+
+    Returns:
+        Lists containing the Color Moments for each window, one for each channel.
+    """
     y, u, v = cv2.split(img)
     img_h, img_w, chans = img.shape
 
@@ -75,6 +113,13 @@ def make_lut_v():
 
 # Taken from https://stackoverflow.com/a/43988642
 def visualize_yuv(img_path, op_path):
+    """
+    Visualizes the YUV channels of an Image.
+
+    Args:
+        img_path: The path of the input image.
+        op_path: The path to write the output image
+    """
     img = cv2.imread(str(img_path))
 
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
@@ -97,6 +142,15 @@ def visualize_yuv(img_path, op_path):
 
 
 def visualize_moments(img_path, op_path, win_h, win_w):
+    """
+    Visualizes each of the Color Moments for each of the three channels in YUV.
+
+    Args:
+        img_path: The path of the input image.
+        op_path: The path of the output image.
+        win_h: The height of the window to split the input image.
+        win_w: The width of the window to split the input image.
+    """
     img = cv2.imread(str(img_path))
     img_h, img_w, chans = img.shape
 
@@ -166,6 +220,15 @@ class CompareMoment(object):
         self.v_w = np.array(v_w)
 
     def compare_one(self, rec):
+        """
+        Compares the Color Moments of two images.
+
+        Args:
+            rec: The Color Moments to be compared to the Color Moments of the image this class instance was created with.
+
+        Returns:
+            The average of the Manhattan distance of the Color Moments across all the windows the image was split into.
+        """
         y = pickle.loads(rec["y_moments"])
         u = pickle.loads(rec["u_moments"])
         v = pickle.loads(rec["v_moments"])

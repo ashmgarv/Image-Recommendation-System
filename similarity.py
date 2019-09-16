@@ -7,8 +7,8 @@ import pickle
 from pathlib import Path
 from pymongo import MongoClient
 from dynaconf import settings
-from feature.moment import CompareMoment
-from feature.sift import CompareSift
+from feature.moment import CompareMoment, Moment
+from feature.sift import CompareSift, Sift
 
 import output
 from tqdm import tqdm, trange
@@ -39,8 +39,8 @@ def calc_sim(img_path, k, model):
 
     if model == "moment":
         coll = client.db[settings.MOMENT.COLLECTION]
-        c = CompareMoment(img_path, settings.WINDOW.WIN_HEIGHT,
-                          settings.WINDOW.WIN_WIDTH, [
+        m = Moment(settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH)
+        c = CompareMoment(m.process_img(img_path) , [
                               settings.MOMENT.W_Y_1, settings.MOMENT.W_Y_2,
                               settings.MOMENT.W_Y_3
                           ], [
@@ -52,7 +52,8 @@ def calc_sim(img_path, k, model):
                           ])
     elif model == "sift":
         coll = client.db[settings.SIFT.COLLECTION]
-        c = CompareSift(img_path, bool(settings.SIFT.USE_OPENCV))
+        s = Sift(bool(settings.SIFT.USE_OPENCV))
+        c = CompareSift(s.process_img(img_path))
 
     res = []
     p = Pool(processes=10)

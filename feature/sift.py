@@ -5,7 +5,6 @@ import numpy as np
 
 from dynaconf import settings
 from pymongo import MongoClient
-from .feature import Feature
 
 import copyreg
 import pickle
@@ -19,6 +18,7 @@ def _pickle_keypoints(point):
 
 
 copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoints)
+
 
 def parse_sift_op(out):
     """
@@ -62,91 +62,90 @@ def parse_sift_op(out):
     return [keys, np.array(desc)]
 
 
-class Sift(Feature):
-    def __init__(self, use_opencv):
-        self.sift_opencv = cv2.xfeatures2d.SIFT_create() if use_opencv else None
+def img_sift(img_path, sift_opencv):
+    """
+    Extracts the SIFT keypoints from a provided image.
 
-    def img_sift(self, img_path):
-        """
-        Extracts the SIFT keypoints from a provided image.
+    Args:
+        img_path: The given image to operate on.
+        sift_opencv: An instance of OpenCV's sift. If not provided, the application will fallback to the SIFT binary by David Lowe.
 
-        Args:
-            img_path: The given image to operate on.
-            sift_opencv: An instance of OpenCV's sift. If not provided, the application will fallback to the SIFT binary by David Lowe.
+    Returns:
+        An array of cv2.KeyPoint and list of descriptors associated with each keypoint.
+    """
+    # TODO: Resize image?
+    # sift binary does not ally images having > 1800 pixels in any dimension.
+    # Also we have to maintain aspect ratio.
 
-        Returns:
-            An array of cv2.KeyPoint and list of descriptors associated with each keypoint.
-        """
-        # TODO: Resize image?
-        # sift binary does not ally images having > 1800 pixels in any dimension.
-        # Also we have to maintain aspect ratio.
+    # img = cv2.imread(str(img_path))
+    # img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    img_gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
 
-        # img = cv2.imread(str(img_path))
-        # img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        img_gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
+    if sift_opencv:
+        # sift = cv2.xfeatures2d.SIFT_create()
+        # res = sift.detectAndCompute(img_gray, None)
+        res = sift_opencv.detectAndCompute(img_gray, None)
+        # cv2.KeyPoint cannot be pickled. So multiprocessing with this is not
+        # possible
+        # res = [[(i.pt[0], i.pt[1], i.size, i.angle,) for i in res[0]], res[1]]
+        res = [res[0], res[1]]
+        return res
 
-        if self.sift_opencv:
-            # sift = cv2.xfeatures2d.SIFT_create()
-            # res = sift.detectAndCompute(img_gray, None)
-            res = self.sift_opencv.detectAndCompute(img_gray, None)
-            # cv2.KeyPoint cannot be pickled. So multiprocessing with this is not
-            # possible
-            # res = [[(i.pt[0], i.pt[1], i.size, i.angle,) for i in res[0]], res[1]]
-            res = [res[0], res[1]]
-            return res
+    img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
 
-        img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
+    ret, out, err = utils.talk([settings.SIFT.BIN_PATH],
+                               settings._root_path,
+                               stdin=img_data,
+                               stdout=True)
+    if err.startswith("Finding keypoints") and err.endswith(
+            "keypoints found.\n"):
+        err = None
 
-        ret, out, err = utils.talk([settings.SIFT.BIN_PATH],
-                                   settings._root_path,
-                                   stdin=img_data,
-                                   stdout=True)
-        if err.startswith("Finding keypoints") and err.endswith(
-                "keypoints found.\n"):
-            err = None
+    if ret != 0 or err != None:
+        raise Exception("Error occured: {}".format(err))
 
-        if ret != 0 or err != None:
-            raise Exception("Error occured: {}".format(err))
-
-        try:
-            return parse_sift_op(out)
-        except Exception as e:
-            raise Exception("Invalid output from sift binary: {}\n{}".format(
-                e, out))
+    try:
+        return parse_sift_op(out)
+    except Exception as e:
+        raise Exception("Invalid output from sift binary: {}\n{}".format(
+            e, out))
 
 
-    def process_img(self, img_path):
-        return {
-            "path":
-                str(img_path),
-            "sift":
-                self.img_sift(str(img_path))
-        }
+def process_img(img_path, use_opencv):
+    return {
+        "path":
+            str(img_path),
+        "sift":
+            img_sift(str(img_path),
+                     cv2.xfeatures2d.SIFT_create() if use_opencv else None)
+    }
 
 
-    def visualize(self, img_path, op_path):
-        """
-        Draws the keypoints on the image and writes the image on the disk.
+def visualize_sift(img_path, op_path):
+    """
+    Draws the keypoints on the image and writes the image on the disk.
 
-        Args:
-            img_path: The image who's SIFT features are to be visualized.
-            op_path: Path to write the output image.
-        """
-        img = cv2.imread(str(img_path))
-        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        kp = self.img_sift(img_path)
-        img = cv2.drawKeypoints(gray,
-                                kp[0],
-                                img,
-                                flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        cv2.imwrite(
-            str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
+    Args:
+        img_path: The image who's SIFT features are to be visualized.
+        op_path: Path to write the output image.
+    """
+    img = cv2.imread(str(img_path))
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    sift = cv2.xfeatures2d.SIFT_create()
+    kp = sift.detectAndCompute(gray, None)
+    img = cv2.drawKeypoints(gray,
+                            kp[0],
+                            img,
+                            flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imwrite(
+        str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
 
 
 class CompareSift(object):
 
-    def __init__(self, img_data):
-        self.img_data = img_data
+    def __init__(self, img_path, use_opencv):
+        self.img_path = img_path
+        self.img_data = process_img(str(img_path.resolve()), use_opencv)
 
     def find_nearest_kps(self, kps, kp):
         """

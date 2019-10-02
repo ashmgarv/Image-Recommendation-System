@@ -4,6 +4,9 @@ import pickle
 from pymongo import MongoClient
 from dynaconf import settings
 
+from sklearn.preprocessing import MinMaxScaler
+
+
 def moment_1(window):
     """
     Calculates the first Moment of the given image window.
@@ -64,6 +67,7 @@ def img_moment(img, win_h, win_w):
     Returns:
         Lists containing the Color Moments for each window, one for each channel.
     """
+    img = cv2.bitwise_not(img)
     y, u, v = cv2.split(img)
     img_h, img_w, chans = img.shape
 
@@ -86,6 +90,16 @@ def img_moment(img, win_h, win_w):
 
             win = v[i:i + win_h, j:j + win_w]
             mfw.extend([moment_1(win), moment_2(win), moment_3(win)])
+
+            # mfw = []
+            # win = y[i:i + win_h, j:j + win_w]
+            # mfw.extend([moment_1(win), moment_2(win), moment_3(MinMaxScaler(feature_range=(0, 10)).fit_transform(win))])
+
+            # win = u[i:i + win_h, j:j + win_w]
+            # mfw.extend([moment_1(win), moment_2(win), moment_3(MinMaxScaler(feature_range=(0, 10)).fit_transform(win))])
+
+            # win = v[i:i + win_h, j:j + win_w]
+            # mfw.extend([moment_1(win), moment_2(win), moment_3(MinMaxScaler(feature_range=(0, 10)).fit_transform(win))])
 
             moments.append(mfw)
 

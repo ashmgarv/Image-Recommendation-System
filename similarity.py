@@ -14,6 +14,11 @@ import output
 from tqdm import tqdm, trange
 from multiprocessing import Pool
 
+from sklearn.decomposition import NMF
+from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import minmax_scale
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
@@ -61,6 +66,172 @@ def calc_sim(img_path, k, model):
         return np.flip(res[-1 * k:])
 
 
+def calc_svd_sim(img_path, k):
+    client = MongoClient('mongodb://localhost:27017/')
+    coll = client.db["img_moment_inv"]
+    data = list(coll.find())
+
+    # Metadata
+    # hand_meta = list(client.db.hands_meta.find({"gender": "male"}))
+    hand_meta = list(client.db.hands_meta.find())
+    hand_meta = {i['imageName']: {
+        "id": i["id"],
+        "aspectOfHand": i["aspectOfHand"],
+        "age": i["age"],
+        "gender": i["gender"],
+        "skinColor": i["skinColor"],
+        "accessories": i["accessories"],
+        "nailPolish": i["nailPolish"],
+        "irregularities": i["irregularities"]
+        } for i in hand_meta}
+
+    # filter
+    data = [d for d in data if d['path'].split("/")[-1] in hand_meta]
+    meta = {i['path']: idx for idx,i in enumerate(data)}
+
+    data = [pickle.loads(i['moments']) for i in data]
+    data = [i.flatten() for i in data]
+    data = np.array(data)
+
+    # SVD
+    # u, s, vh = np.linalg.svd(data, full_matrices=False)
+    # dims = 200
+
+    # NMF
+    # Results actually change even with a linear transformation
+
+    # Increment all by min. Best so far.
+    # import pdb
+    # pdb.set_trace()
+    inc = np.amin(data.flatten())
+    if inc < 0:
+        data += (-1 * inc)
+
+    # Incrementing only the skew columns. No good.
+    # for i in range(data.shape[0]):
+    #     for j in range(data.shape[1]):
+    #         if j % 3 == 2:
+    #             data[i,j] += 100
+
+    # Just scale those columns
+    # for j in range(data.shape[1]):
+    #     if j % 3 == 2:
+    #         data[:,j] = minmax_scale(data[:,j], feature_range=(0,100))
+
+    # Removing all the skew. Doesnt give great results.
+    # data = data[:,[i for i in range(data.shape[1]) if i % 3 != 2]]
+
+    # These dont do much good
+    # data = MinMaxScaler(feature_range=(0, 10)).fit_transform(data)
+    # data = RobustScaler().fit_transform(data)
+
+    model = NMF(n_components=20, init='random', random_state=0)
+    u = model.fit_transform(data)
+    dims = u.shape[1]
+
+    img_desc = u[meta[str(img_path)]]
+
+    # Euclidean
+    d = np.sqrt(np.sum(np.power(u[:,:dims] - img_desc[:dims], 2), axis=1))
+
+    # Manhattan
+    # d = np.sum(u[:,:dims] - img_desc[:dims], axis=1)
+
+    # Pearsons Corelation, rev
+    # d = []
+    # for i in range(0, u.shape[0]):
+    #     d.append(np.corrcoef(u[i,:dims], img_desc[:dims])[0,1])
+
+    # Cosine Similarity, rev
+    # d = []
+    # for i in range(0, u.shape[0]):
+    #     d.append(np.dot(u[i,:dims], img_desc[:dims])/(np.linalg.norm(u[i,:dims])*np.linalg.norm(img_desc[:dims])))
+
+    # Intersection similarity, rev
+    # Looks like it needs positive values
+    # Somehow, SVD may generate negative values. So this wont work.
+    # d = []
+    # for i in range(0, u.shape[0]):
+    #     ma = sum([max(u[i,j], img_desc[j]) for j in range(0, dims)])
+    #     mi = sum([min(u[i,j], img_desc[j]) for j in range(0, dims)])
+    #     d.append(mi/float(ma))
+
+    ranks = [(path, d[meta[path]]) for path in meta]
+    ranks = np.array(ranks, dtype=[('x', object), ('y', float)])
+    ranks.sort(order="y")
+
+    return ranks[:k]
+    # return np.flip(ranks[-1 * k:])
+
+def task_8(k):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    hand_meta = list(client.db.hands_meta.find())
+    img_meta = []
+    for meta in hand_meta:
+        temp = []
+        temp.append(meta["age"])
+        temp.append(0 if meta["gender"] == "male" else 1)
+        if meta["skinColor"] == "fair":
+            temp.append(0)
+        elif meta["skinColor"] == "dark":
+            temp.append(1)
+        elif meta["skinColor"] == "medium":
+            temp.append(2)
+        elif meta["skinColor"] == "very fair":
+            temp.append(3)
+        else:
+            print("GOT {}".format(meta["skinColor"]))
+            raise Exception
+        temp.append(meta["accessories"])
+        temp.append(meta["nailPolish"])
+        temp.append(0 if meta["aspectOfHand"] == "dorsal" else 1)
+        temp.append(0 if meta["hand"] == "right" else 1)
+        temp.append(meta["irregularities"])
+
+        img_meta.append(temp)
+
+    img_meta = np.array(img_meta)
+
+    model = NMF(n_components=20, init='random', random_state=0)
+    u = model.fit_transform(img_meta)
+    h = model.components_
+
+
+
+def task_7(k):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    hand_meta = list(client.db.hands_meta.find())
+    subjects = {}
+    for meta in hand_meta:
+        temp = []
+        temp.append(meta["age"])
+        temp.append(0 if meta["gender"] == "male" else 1)
+        if meta["skinColor"] == "fair":
+            temp.append(0)
+        elif meta["skinColor"] == "dark":
+            temp.append(1)
+        elif meta["skinColor"] == "medium":
+            temp.append(2)
+        elif meta["skinColor"] == "very fair":
+            temp.append(3)
+        else:
+            print("GOT {}".format(meta["skinColor"]))
+            raise Exception
+
+        subjects[meta["id"]] = temp
+
+    subs = np.array([subjects[v] for v in subjects])
+    sub_sub = np.matmul(subs, subs.T)
+
+    model = NMF(n_components=20, init='random', random_state=0)
+    u = model.fit_transform(sub_sub)
+
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
@@ -73,7 +244,9 @@ if __name__ == "__main__":
         raise Exception("Need k > 0")
 
     s = timeit.default_timer()
-    ranks = calc_sim(img_path, args.k_nearest, args.model)
+    # ranks = calc_sim(img_path, args.k_nearest, args.model)
+    # ranks = calc_svd_sim(img_path, args.k_nearest)
+    ranks = task_8(args.k_nearest)
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 

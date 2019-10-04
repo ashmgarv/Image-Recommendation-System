@@ -227,7 +227,38 @@ def task_7(k):
         subjects[meta["id"]] = temp
 
     subs = np.array([subjects[v] for v in subjects])
-    sub_sub = np.matmul(subs, subs.T)
+
+    # Generate subject, subject similarity
+    # sub_sub = np.matmul(subs, subs.T)
+    sub_sub = []
+    for sub1 in subs:
+        temp = []
+        for sub2 in subs:
+            # Euclidean
+            d = np.sqrt(np.sum(np.power(sub1 - sub2, 2)))
+            if d != 0:
+                d = 1 / d
+
+            # Manhattan
+            # d = np.sum(sub1 - sub2)
+            # if d != 0:
+            #     d = 1 / d
+
+            # Pearsons Corelation, rev
+            # d = np.corrcoef(sub1, sub2)[0,1]
+
+            # Cosine Similarity, rev
+            # d = np.dot(sub1, sub2)/(np.linalg.norm(sub1) * np.linalg.norm(sub2))
+
+            # Intersection similarity, rev
+            # ma = sum([max(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
+            # mi = sum([min(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
+            # d = mi/float(ma)
+
+            temp.append(d)
+        sub_sub.append(temp)
+
+    sub_sub = np.array(sub_sub)
 
     model = NMF(n_components=20, init='random', random_state=0)
     u = model.fit_transform(sub_sub)
@@ -246,7 +277,8 @@ if __name__ == "__main__":
     s = timeit.default_timer()
     # ranks = calc_sim(img_path, args.k_nearest, args.model)
     # ranks = calc_svd_sim(img_path, args.k_nearest)
-    ranks = task_8(args.k_nearest)
+    # ranks = task_8(args.k_nearest)
+    ranks = task_7(args.k_nearest)
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 

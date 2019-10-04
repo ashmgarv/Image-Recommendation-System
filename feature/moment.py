@@ -89,7 +89,7 @@ def img_moment(img, win_h, win_w):
 
             moments.append(mfw)
 
-    return moments
+    return np.array(moments)
 
 
 def process_img(img_path, win_h, win_w):
@@ -210,7 +210,7 @@ class CompareMoment(object):
 
     def __init__(self, img_path, win_h, win_w, weights):
         self.key_feats = process_img(str(img_path.resolve()), win_h, win_w)
-        self.k = np.array(self.key_feats["moments"])
+        self.k = self.key_feats["moments"]
         self.w = np.array(weights)
 
     def compare_one(self, rec):

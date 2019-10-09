@@ -21,6 +21,22 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import minmax_scale
 
+mapping = {
+    "male": 0,
+    "female": 1,
+
+    "fair": 0,
+    "very fair": 1,
+    "medium": 2,
+    "dark": 3,
+
+    "dorsal": 0,
+    "palmar": 1,
+
+    "right": 0,
+    "left": 1
+}
+
 def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
@@ -171,33 +187,21 @@ def task_8(k):
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     hand_meta = list(client.db.hands_meta.find())
-    img_meta = []
-    for meta in hand_meta:
-        temp = []
-        temp.append(meta["age"])
-        temp.append(0 if meta["gender"] == "male" else 1)
-        if meta["skinColor"] == "fair":
-            temp.append(0)
-        elif meta["skinColor"] == "dark":
-            temp.append(1)
-        elif meta["skinColor"] == "medium":
-            temp.append(2)
-        elif meta["skinColor"] == "very fair":
-            temp.append(3)
-        else:
-            print("GOT {}".format(meta["skinColor"]))
-            raise Exception
-        temp.append(meta["accessories"])
-        temp.append(meta["nailPolish"])
-        temp.append(0 if meta["aspectOfHand"] == "dorsal" else 1)
-        temp.append(0 if meta["hand"] == "right" else 1)
-        temp.append(meta["irregularities"])
+    try:
+        img_meta = np.array([[
+            meta["age"],
+            mapping[meta["gender"]],
+            mapping[meta["skinColor"]],
+            meta["accessories"],
+            meta["nailPolish"],
+            mapping[meta["aspectOfHand"]],
+            mapping[meta["hand"]],
+            meta["irregularities"]] for meta in hand_meta])
+    except KeyError:
+        raise Exception("Invalid metadata detected")
+        return
 
-        img_meta.append(temp)
-
-    img_meta = np.array(img_meta)
-
-    model = NMF(n_components=20, init='random', random_state=0)
+    model = NMF(n_components=k, init='random', random_state=0)
     u = model.fit_transform(img_meta)
     h = model.components_
 

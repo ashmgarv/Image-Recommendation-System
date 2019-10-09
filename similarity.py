@@ -1,4 +1,5 @@
 import timeit
+from metric import distance
 import cv2
 import numpy as np
 import argparse
@@ -132,7 +133,8 @@ def calc_svd_sim(img_path, k):
     img_desc = u[meta[str(img_path)]]
 
     # Euclidean
-    d = np.sqrt(np.sum(np.power(u[:,:dims] - img_desc[:dims], 2), axis=1))
+    # d = np.sqrt(np.sum(np.power(u[:,:dims] - img_desc[:dims], 2), axis=1))
+    d = distance.distance(u[:,:dims], img_desc[:dims], distance.EUCLIDEAN)
 
     # Manhattan
     # d = np.sum(u[:,:dims] - img_desc[:dims], axis=1)
@@ -276,9 +278,9 @@ if __name__ == "__main__":
 
     s = timeit.default_timer()
     # ranks = calc_sim(img_path, args.k_nearest, args.model)
-    # ranks = calc_svd_sim(img_path, args.k_nearest)
+    ranks = calc_svd_sim(img_path, args.k_nearest)
     # ranks = task_8(args.k_nearest)
-    ranks = task_7(args.k_nearest)
+    # ranks = task_7(args.k_nearest)
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 

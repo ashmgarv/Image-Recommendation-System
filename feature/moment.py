@@ -237,31 +237,3 @@ def get_all_vectors(f={}):
 
     return all_image_names, np.array(all_vectors)
 
-class CompareMoment(object):
-
-    def __init__(self, img_path, win_h, win_w, weights):
-        self.key_feats = process_img(str(img_path.resolve()), win_h, win_w)
-        self.k = self.key_feats["moments"]
-        self.w = np.array(weights)
-
-    def compare_one(self, rec):
-        """
-        Compares the Color Moments of two images.
-
-        Args:
-            rec: The Color Moments to be compared to the Color Moments of the image this class instance was created with.
-
-        Returns:
-            The average of the Manhattan distance of the Color Moments across all the windows the image was split into.
-        """
-        m = pickle.loads(rec["moments"])
-        d_m = np.absolute(self.k - m) * self.w
-
-        div = d_m.shape[0]
-
-        res = (
-            rec["path"],
-            d_m.flatten().sum() / div,
-        )
-
-        return res

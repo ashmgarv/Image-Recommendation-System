@@ -61,5 +61,5 @@ $ python feature.py -m <model> -i <image path> -v
 
 To find top _k_ similar images, run:
 ```
-$ python similarity.py -m <model> -i <image path> -k <number of matches required>
+$ python task.py -m <model> -i <image path> -k <number of matches required>
 ```

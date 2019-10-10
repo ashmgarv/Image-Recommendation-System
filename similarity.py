@@ -1,295 +1,109 @@
-import timeit
-from metric import distance
-import cv2
-import numpy as np
-import argparse
 import pickle
+import numpy as np
 
-from pathlib import Path
-from pymongo import MongoClient
-from dynaconf import settings
-from feature.moment import CompareMoment
-from feature.sift import CompareSift
-
-import output
+from abc import ABC, abstractmethod
 from tqdm import tqdm, trange
 from multiprocessing import Pool
+from feature import moment, sift
 
-from sklearn.decomposition import NMF
-from sklearn import preprocessing
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import RobustScaler
-from sklearn.preprocessing import minmax_scale
+MOMENT = 0
+SIFT = 1
 
-mapping = {
-    "male": 0,
-    "female": 1,
+class Compare(object):
+    @abstractmethod
+    def compare_one(self, rec):
+        pass
 
-    "fair": 0,
-    "very fair": 1,
-    "medium": 2,
-    "dark": 3,
+    def compare_many(self, recs, size):
+        if size == 0:
+            print("Warning: Comparision with 0 elements")
+            return []
 
-    "dorsal": 0,
-    "palmar": 1,
+        res = []
+        p = Pool(processes=10)
+        pbar = tqdm(total=size)
 
-    "right": 0,
-    "left": 1
-}
+        for r in p.imap_unordered(self.compare_one, recs, chunksize=100):
+            res.append(r)
+            pbar.update()
 
-def prepare_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, required=True)
-    parser.add_argument('-k', '--k-nearest', type=int, required=True)
-    parser.add_argument('-i', '--image', type=str, required=True)
-    return parser
+        res = np.array(res, dtype=[('x', object), ('y', float)])
+        res.sort(order="y")
+
+        return res
 
 
-def calc_sim(img_path, k, model):
-    """
-    Find the top k similar images from the database to the provided input image.
+class CompareMoment(Compare):
+    def __init__(self, **kwargs):
+        self.key_feats = moment.process_img(str(kwargs["img_path"].resolve()), kwargs["win_h"], kwargs["win_w"])
+        self.k = self.key_feats["moments"]
+        self.w = np.array(kwargs["weights"])
 
-    Args:
-        img_path: Path of the input image.
-        k: The number of matches to be selected.
-        model: The model to be used for matching.
-    """
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
+    def compare_one(self, rec):
+        """
+        Compares the Color Moments of two images.
 
-    if model == "moment":
-        coll = client.db[settings.MOMENT.COLLECTION]
-        c = CompareMoment(img_path, settings.WINDOW.WIN_HEIGHT, settings.WINDOW.WIN_WIDTH, settings.MOMENT.WEIGHTS)
-    elif model == "sift":
-        coll = client.db[settings.SIFT.COLLECTION]
-        c = CompareSift(img_path, bool(settings.SIFT.USE_OPENCV))
+        Args:
+            rec: The Color Moments to be compared to the Color Moments of the image this class instance was created with.
 
-    res = []
-    p = Pool(processes=10)
-    pbar = tqdm(total=coll.count_documents({}))
+        Returns:
+            The average of the Manhattan distance of the Color Moments across all the windows the image was split into.
+        """
+        m = pickle.loads(rec["moments"])
+        d_m = np.absolute(self.k - m) * self.w
 
-    for r in p.imap_unordered(c.compare_one, coll.find(), chunksize=100):
-        res.append(r)
-        pbar.update()
+        div = d_m.shape[0]
 
-    res = np.array(res, dtype=[('x', object), ('y', float)])
-    res.sort(order="y")
+        res = (
+            rec["path"],
+            d_m.flatten().sum() / div,
+        )
 
-    if model == "moment":
-        return res[0:k]
-    elif model == "sift":
-        return np.flip(res[-1 * k:])
+        return res
 
 
-def calc_svd_sim(img_path, k):
-    client = MongoClient('mongodb://localhost:27017/')
-    coll = client.db["img_moment_inv"]
-    data = list(coll.find())
+class CompareSift(Compare):
+    def __init__(self, **kwargs):
+        self.img_path = kwargs["img_path"]
+        self.img_data = sift.process_img(str(self.img_path.resolve()), kwargs["use_opencv"])
 
-    # Metadata
-    # hand_meta = list(client.db.hands_meta.find({"gender": "male"}))
-    hand_meta = list(client.db.hands_meta.find())
-    hand_meta = {i['imageName']: {
-        "id": i["id"],
-        "aspectOfHand": i["aspectOfHand"],
-        "age": i["age"],
-        "gender": i["gender"],
-        "skinColor": i["skinColor"],
-        "accessories": i["accessories"],
-        "nailPolish": i["nailPolish"],
-        "irregularities": i["irregularities"]
-        } for i in hand_meta}
+    def find_nearest_kps(self, kps, kp):
+        """
+        Finds the two nearest keypoints from kps to the keypoint kp. This function implements the ratio check to eliminate ambigious matches.
 
-    # filter
-    data = [d for d in data if d['path'].split("/")[-1] in hand_meta]
-    meta = {i['path']: idx for idx,i in enumerate(data)}
+        Args:
+            kps: List of keypoints in which to find a match.
+            kp: The keypoint who's neighbours are required.
 
-    data = [pickle.loads(i['moments']) for i in data]
-    data = [i.flatten() for i in data]
-    data = np.array(data)
+        Returns:
+            True if there is a suitable keypoint matching kp, False otherwise.
+        """
+        best_two = np.sort(np.sum(np.power(kps - kp, 2), axis=1))[:2]
+        return 10 * 10 * best_two[0] < 8 * 8 * best_two[1]
 
-    # SVD
-    # u, s, vh = np.linalg.svd(data, full_matrices=False)
-    # dims = 200
+    def compare_one(self, img1):
+        """
+        Compares self.img_data to img1. This function find the number of matching keypoints from self.img_data to img1.
 
-    # NMF
-    # Results actually change even with a linear transformation
+        Args:
+            img1: The SIFT features of the image to be compared to.
 
-    # Increment all by min. Best so far.
-    # import pdb
-    # pdb.set_trace()
-    inc = np.amin(data.flatten())
-    if inc < 0:
-        data += (-1 * inc)
+        Returns:
+            A tuple of the image path of img1 and the number of matches.
+        """
+        img1['sift'] = pickle.loads(img1['sift'])
+        res = [
+            1 for i in range(0, len(self.img_data['sift'][1]))
+            if self.find_nearest_kps(img1['sift'][1], self.img_data['sift'][1]
+                                     [i]) == True
+        ]
 
-    # Incrementing only the skew columns. No good.
-    # for i in range(data.shape[0]):
-    #     for j in range(data.shape[1]):
-    #         if j % 3 == 2:
-    #             data[i,j] += 100
+        return (img1['path'], sum(res))
 
-    # Just scale those columns
-    # for j in range(data.shape[1]):
-    #     if j % 3 == 2:
-    #         data[:,j] = minmax_scale(data[:,j], feature_range=(0,100))
+    def compare_many(self, recs, size):
+        return np.flip(super().compare_many(recs, size))
 
-    # Removing all the skew. Doesnt give great results.
-    # data = data[:,[i for i in range(data.shape[1]) if i % 3 != 2]]
+comparators = [CompareMoment, CompareSift]
 
-    # These dont do much good
-    # data = MinMaxScaler(feature_range=(0, 10)).fit_transform(data)
-    # data = RobustScaler().fit_transform(data)
-
-    model = NMF(n_components=20, init='random', random_state=0)
-    u = model.fit_transform(data)
-    dims = u.shape[1]
-
-    img_desc = u[meta[str(img_path)]]
-
-    # Euclidean
-    # d = np.sqrt(np.sum(np.power(u[:,:dims] - img_desc[:dims], 2), axis=1))
-    d = distance.distance(u[:,:dims], img_desc[:dims], distance.EUCLIDEAN)
-
-    # Manhattan
-    # d = np.sum(u[:,:dims] - img_desc[:dims], axis=1)
-
-    # Pearsons Corelation, rev
-    # d = []
-    # for i in range(0, u.shape[0]):
-    #     d.append(np.corrcoef(u[i,:dims], img_desc[:dims])[0,1])
-
-    # Cosine Similarity, rev
-    # d = []
-    # for i in range(0, u.shape[0]):
-    #     d.append(np.dot(u[i,:dims], img_desc[:dims])/(np.linalg.norm(u[i,:dims])*np.linalg.norm(img_desc[:dims])))
-
-    # Intersection similarity, rev
-    # Looks like it needs positive values
-    # Somehow, SVD may generate negative values. So this wont work.
-    # d = []
-    # for i in range(0, u.shape[0]):
-    #     ma = sum([max(u[i,j], img_desc[j]) for j in range(0, dims)])
-    #     mi = sum([min(u[i,j], img_desc[j]) for j in range(0, dims)])
-    #     d.append(mi/float(ma))
-
-    ranks = [(path, d[meta[path]]) for path in meta]
-    ranks = np.array(ranks, dtype=[('x', object), ('y', float)])
-    ranks.sort(order="y")
-
-    return ranks[:k]
-    # return np.flip(ranks[-1 * k:])
-
-def task_8(k):
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
-    hand_meta = list(client.db.hands_meta.find())
-    try:
-        img_meta = np.array([[
-            meta["age"],
-            mapping[meta["gender"]],
-            mapping[meta["skinColor"]],
-            meta["accessories"],
-            meta["nailPolish"],
-            mapping[meta["aspectOfHand"]],
-            mapping[meta["hand"]],
-            meta["irregularities"]] for meta in hand_meta])
-    except KeyError:
-        raise Exception("Invalid metadata detected")
-        return
-
-    model = NMF(n_components=k, init='random', random_state=0)
-    u = model.fit_transform(img_meta)
-    h = model.components_
-
-
-
-def task_7(k):
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
-    hand_meta = list(client.db.hands_meta.find())
-    subjects = {}
-    for meta in hand_meta:
-        temp = []
-        temp.append(meta["age"])
-        temp.append(0 if meta["gender"] == "male" else 1)
-        if meta["skinColor"] == "fair":
-            temp.append(0)
-        elif meta["skinColor"] == "dark":
-            temp.append(1)
-        elif meta["skinColor"] == "medium":
-            temp.append(2)
-        elif meta["skinColor"] == "very fair":
-            temp.append(3)
-        else:
-            print("GOT {}".format(meta["skinColor"]))
-            raise Exception
-
-        subjects[meta["id"]] = temp
-
-    subs = np.array([subjects[v] for v in subjects])
-
-    # Generate subject, subject similarity
-    # sub_sub = np.matmul(subs, subs.T)
-    sub_sub = []
-    for sub1 in subs:
-        temp = []
-        for sub2 in subs:
-            # Euclidean
-            d = np.sqrt(np.sum(np.power(sub1 - sub2, 2)))
-            if d != 0:
-                d = 1 / d
-
-            # Manhattan
-            # d = np.sum(sub1 - sub2)
-            # if d != 0:
-            #     d = 1 / d
-
-            # Pearsons Corelation, rev
-            # d = np.corrcoef(sub1, sub2)[0,1]
-
-            # Cosine Similarity, rev
-            # d = np.dot(sub1, sub2)/(np.linalg.norm(sub1) * np.linalg.norm(sub2))
-
-            # Intersection similarity, rev
-            # ma = sum([max(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
-            # mi = sum([min(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
-            # d = mi/float(ma)
-
-            temp.append(d)
-        sub_sub.append(temp)
-
-    sub_sub = np.array(sub_sub)
-
-    model = NMF(n_components=20, init='random', random_state=0)
-    u = model.fit_transform(sub_sub)
-
-if __name__ == "__main__":
-    parser = prepare_parser()
-    args = parser.parse_args()
-
-    img_path = Path(args.image)
-    if not img_path.exists() or not img_path.is_file():
-        raise Exception("Invalid image path.")
-
-    if args.k_nearest == 0:
-        raise Exception("Need k > 0")
-
-    s = timeit.default_timer()
-    # ranks = calc_sim(img_path, args.k_nearest, args.model)
-    ranks = calc_svd_sim(img_path, args.k_nearest)
-    # ranks = task_8(args.k_nearest)
-    # ranks = task_7(args.k_nearest)
-    e = timeit.default_timer()
-    print("Took {} to calculate".format(e - s))
-
-    output.write_to_file("op_temp.html",
-                         "{}-{}.html".format(img_path.resolve().name, args.model),
-                         ranks=ranks,
-                         key=str(img_path),
-                         title="TEST")
+def comparision(t, **opts):
+    return comparators[t](**opts)

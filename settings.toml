@@ -31,12 +31,7 @@ output_path = "../Outputs/"
   # The colletion to store moments data
     collection = "img_moment_3"
   # Weights used for the calculation of Moment
-    W_Y_1 = 3
-    W_U_1 = 0.5
-    W_V_1 = 0.5
-    W_Y_2 = 3
-    W_U_2 = 0.5
-    W_V_2 = 0.5
-    W_Y_3 = 3
-    W_U_3 = 0.5
-    W_V_3 = 0.5
+  # Format is - W_Y_1, W_Y_2, W_Y_3, W_U_1, W_U_2, W_U_3, W_V_1, W_V_2, W_V_3
+  # Must be in double format.
+    weights = [3.0, 3.0, 3.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+

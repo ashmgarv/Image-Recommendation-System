@@ -24,18 +24,13 @@ def prepare_parser():
 def process_moment_img(img_path):
     res = moment.process_img(img_path.resolve(), settings.WINDOW.WIN_HEIGHT,
                              settings.WINDOW.WIN_WIDTH)
-    res["y_moments"] = Binary(
-        pickle.dumps(np.array(res["y_moments"]), protocol=2))
-    res["u_moments"] = Binary(
-        pickle.dumps(np.array(res["u_moments"]), protocol=2))
-    res["v_moments"] = Binary(
-        pickle.dumps(np.array(res["v_moments"]), protocol=2))
+    res["moments"] = Binary(pickle.dumps(res["moments"], protocol=2))
     return res
 
 
 def process_sift_img(img_path):
     res = sift.process_img(img_path.resolve(), bool(settings.SIFT.USE_OPENCV))
-    res['sift'] = Binary(pickle.dumps(res['sift']))
+    res['sift'] = Binary(pickle.dumps(res['sift'], protocol=2))
     return res
 
 

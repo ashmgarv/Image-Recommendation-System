@@ -66,9 +66,7 @@ def img_moment(img, win_h, win_w):
     y, u, v = cv2.split(img)
     img_h, img_w, chans = img.shape
 
-    y_mom_feat = []
-    u_mom_feat = []
-    v_mom_feat = []
+    moments = []
     # Ignore the left out pixels? Or perhaps take another window overlapping the
     # last window created.
     for i in range(0, img_h, win_h):
@@ -78,27 +76,28 @@ def img_moment(img, win_h, win_w):
             if j + win_w > img_w:
                 break
 
+            mfw = []
             win = y[i:i + win_h, j:j + win_w]
-            y_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
+            mfw.extend([moment_1(win), moment_2(win), moment_3(win)])
 
             win = u[i:i + win_h, j:j + win_w]
-            u_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
+            mfw.extend([moment_1(win), moment_2(win), moment_3(win)])
 
             win = v[i:i + win_h, j:j + win_w]
-            v_mom_feat.append([moment_1(win), moment_2(win), moment_3(win)])
+            mfw.extend([moment_1(win), moment_2(win), moment_3(win)])
 
-    return y_mom_feat, u_mom_feat, v_mom_feat
+            moments.append(mfw)
+
+    return np.array(moments)
 
 
 def process_img(img_path, win_h, win_w):
     img = cv2.imread(str(img_path))
     img_yuv = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-    y, u, v = img_moment(img_yuv, win_h, win_w)
+    moments = img_moment(img_yuv, win_h, win_w)
     return {
         "path": str(img_path),
-        "y_moments": y,
-        "u_moments": u,
-        "v_moments": v
+        "moments": moments
     }
 
 
@@ -208,15 +207,10 @@ def visualize_moments(img_path, op_path, win_h, win_w):
 
 class CompareMoment(object):
 
-    def __init__(self, img_path, win_h, win_w, y_w, u_w, v_w):
+    def __init__(self, img_path, win_h, win_w, weights):
         self.key_feats = process_img(str(img_path.resolve()), win_h, win_w)
-        self.k_y = np.array(self.key_feats["y_moments"])
-        self.k_u = np.array(self.key_feats["u_moments"])
-        self.k_v = np.array(self.key_feats["v_moments"])
-
-        self.y_w = np.array(y_w)
-        self.u_w = np.array(u_w)
-        self.v_w = np.array(v_w)
+        self.k = self.key_feats["moments"]
+        self.w = np.array(weights)
 
     def compare_one(self, rec):
         """
@@ -228,19 +222,14 @@ class CompareMoment(object):
         Returns:
             The average of the Manhattan distance of the Color Moments across all the windows the image was split into.
         """
-        y = pickle.loads(rec["y_moments"])
-        u = pickle.loads(rec["u_moments"])
-        v = pickle.loads(rec["v_moments"])
+        m = pickle.loads(rec["moments"])
+        d_m = np.absolute(self.k - m) * self.w
 
-        d_y = np.absolute(self.k_y - y) * self.y_w
-        d_u = np.absolute(self.k_u - u) * self.u_w
-        d_v = np.absolute(self.k_v - v) * self.v_w
+        div = d_m.shape[0]
 
-        div = d_y.shape[0]
-        d = d_y.flatten() + d_u.flatten() + d_v.flatten()
         res = (
             rec["path"],
-            d.sum() / div,
+            d_m.flatten().sum() / div,
         )
 
         return res

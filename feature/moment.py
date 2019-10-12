@@ -55,7 +55,7 @@ def moment_3(window):
     # return (temp ** 1/3) * -1
 
 
-def img_moment(img, win_h, win_w):
+def img_moment(img, win_h, win_w, invert=False):
     """
     Divides the image into windows of win_h x win_w and calculates the three moments for each of these windows.
 
@@ -67,7 +67,8 @@ def img_moment(img, win_h, win_w):
     Returns:
         Lists containing the Color Moments for each window, one for each channel.
     """
-    img = cv2.bitwise_not(img)
+    if invert:
+        img = cv2.bitwise_not(img)
     y, u, v = cv2.split(img)
     img_h, img_w, chans = img.shape
 
@@ -106,10 +107,10 @@ def img_moment(img, win_h, win_w):
     return np.array(moments)
 
 
-def process_img(img_path, win_h, win_w):
+def process_img(img_path, win_h, win_w, invert=False):
     img = cv2.imread(str(img_path))
     img_yuv = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-    moments = img_moment(img_yuv, win_h, win_w)
+    moments = img_moment(img_yuv, win_h, win_w, invert)
     return {
         "path": str(img_path),
         "moments": moments

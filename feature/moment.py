@@ -42,8 +42,7 @@ def moment_3(window):
     std = window.std()
     if std == 0 or window.size == 0:
         return 0
-    return np.power(
-        (window - window.mean()) / window.std(), 3).sum() / window.size
+    return np.power((window - window.mean()) / window.std(), 3).sum() / window.size
     # mean = window.flatten().mean()
     # temp = np.fromfunction(lambda x,y: (window[x,y] - mean) ** 3, window.shape, dtype=int).flatten().sum() / (window.shape[0] * window.shape[1])
     # if temp >= 0:

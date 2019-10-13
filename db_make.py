@@ -54,7 +54,8 @@ def build_metadata_db(path):
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+    db = client[settings.DATABASE]
+    coll = db[settings.IMAGES.METADATA_COLLECTION]
     coll.delete_many({})
     coll.insert_many(image_metadata.to_dict('records'))
 
@@ -122,7 +123,6 @@ if __name__ == "__main__":
     print("inserting metadata")
     build_metadata_db(args.data_path)
     print("finished")
-
 
     build_db(args.model, None if not args.data_path else path,
              None if not args.collection else coll_name)

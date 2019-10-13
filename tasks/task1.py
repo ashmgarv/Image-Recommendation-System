@@ -28,10 +28,7 @@ def get_all_vectors(model):
         image_labels, vectors -- array of image names and corresponding vectors (2 variables)
     """
     if model == 'moment':
-        coll_name = settings.MOMENT.collection
-        coll = client.db[coll_name]
-        return get_all_moment_vectors(coll)
-
+        return get_all_moment_vectors()
     if model == 'sift':
         pass
     if model == 'hog':
@@ -42,10 +39,7 @@ def get_all_vectors(model):
 if __name__ == '__main__':
     parser = prepare_parser()
     args = parser.parse_args()
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
+    
     images, vectors = get_all_vectors(args.model)
     
     # reducer automatically maps feature_reduction_technique to the right function

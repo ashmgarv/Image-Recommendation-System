@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import pickle
+from pymongo import MongoClient
+from dynaconf import settings
 
 def moment_1(window):
     """
@@ -203,10 +205,18 @@ def visualize_moments(img_path, op_path, win_h, win_w):
     cv2.imwrite(str(op_path / '{}_v.png'.format(img_path.resolve().name)),
                 result_v)
 
-def get_all_vectors(coll, f={}):
+def get_all_vectors(f={}):
+
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll_name = settings.MOMENT.collection
+    coll = client.db[coll_name]
+
     all_image_names = []
     all_vectors = []
-    for row in coll.find({}):
+    for row in coll.find(f):
         all_image_names.append(row['path'])
         moments = pickle.loads(row['moments']).flatten()
         all_vectors.append(moments)

@@ -1,10 +1,10 @@
-import cv2
+import mahotas as mh
 from skimage import feature
 import numpy as np
 
 
 def process_img(img_path):
-    img = cv2.imread(str(img_path))
+    img = mh.imread(str(img_path), as_grey=True)
     lbp_feature_vector = []
 
     # Turn the image into 100 * 100 smaller np arrays
@@ -19,7 +19,10 @@ def process_img(img_path):
         histogram = np.histogram(lbp_window.flatten(), bins=2 ** num_points)
         lbp_feature_vector.extend(histogram[0])
 
-    return lbp_feature_vector
+    return {
+        'path' : str(img_path),
+        'lbp' : lbp_feature_vector
+    }
 
 
 def turn_into_100c100(arr, nrows, ncols):

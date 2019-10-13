@@ -9,7 +9,7 @@ def get_pca(vectors, k, **opts):
 
     pca = PCA(n_components=k)
     pca_vectors = pca.fit_transform(scaled_values)
-    return pca_vectors, pca.explained_variance_, pca.components_
+    return pca_vectors, pca.explained_variance_, pca.components_, pca, std_scaler
 
 #SVD with standard scaler
 def get_svd(vectors, k, **opts):
@@ -17,7 +17,7 @@ def get_svd(vectors, k, **opts):
     scaled_values = std_scaler.fit_transform(vectors)
 
     svd_vectors, eigenvalues, latent_vs_old_features = np.linalg.svd(scaled_values, full_matrices=False)
-    return svd_vectors[:,:k], eigenvalues[:k], latent_vs_old_features[:,:k].T
+    return svd_vectors[:,:k], eigenvalues[:k], latent_vs_old_features[:,:k].T, None, std_scaler
 
 #LDA with minmax scaler
 def get_lda(vectors, k, **opts):
@@ -26,7 +26,7 @@ def get_lda(vectors, k, **opts):
 
     lda = LatentDirichletAllocation(n_components=k, verbose=2,random_state=0,learning_method='online',n_jobs=-1)
     lda_vectors = lda.fit_transform(scaled_values)
-    return lda_vectors, None, lda.components_
+    return lda_vectors, None, lda.components_, lda, None, min_max_scaler
 
 #NMF with minmax scaler
 def get_nmf(vectors, k, **opts):
@@ -35,7 +35,7 @@ def get_nmf(vectors, k, **opts):
 
     nmf = NMF(n_components=k, init='random', random_state=0)
     nmf_vectors = nmf.fit_transform(scaled_values)
-    return nmf_vectors, None, nmf.components_
+    return nmf_vectors, None, nmf.components_, nmf, min_max_scaler
 
 reducer_type = {
     "lda": get_lda,

@@ -20,7 +20,6 @@ def prepare_parser():
     parser.add_argument('-c', '--collection', type=str)
     return parser
 
-
 def process_moment_img(img_path):
     res = moment.process_img(img_path.resolve(), settings.WINDOW.WIN_HEIGHT,
                              settings.WINDOW.WIN_WIDTH)

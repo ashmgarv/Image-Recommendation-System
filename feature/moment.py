@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import pickle
 
-
 def moment_1(window):
     """
     Calculates the first Moment of the given image window.
@@ -204,6 +203,15 @@ def visualize_moments(img_path, op_path, win_h, win_w):
     cv2.imwrite(str(op_path / '{}_v.png'.format(img_path.resolve().name)),
                 result_v)
 
+def get_all_vectors(coll, f={}):
+    all_image_names = []
+    all_vectors = []
+    for row in coll.find({}):
+        all_image_names.append(row['path'])
+        moments = pickle.loads(row['moments'])
+        all_vectors.append(moments)
+
+    return all_image_names, np.array(all_vectors)
 
 class CompareMoment(object):
 

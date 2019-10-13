@@ -8,6 +8,8 @@ import sys
 import os
 
 sys.path.append('../')
+from output import write_to_file
+from metric.distance import distance
 from feature.moment import get_all_vectors
 from feature_reduction.feature_reduction import reducer
 from feature_reduction.utils import get_term_weight_pairs
@@ -17,8 +19,7 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
     parser.add_argument('-k', '--k_latent_semantics', type=int, required=True)
-    parser.add_argument(
-        '-frt', '--feature_reduction_technique', type=str, required=True)
+    parser.add_argument('-frt', '--feature_reduction_technique', type=str, required=True)
     parser.add_argument('-i', '--image_name', type=str, required=True)
     parser.add_argument('-d', '--data_path', type=str)
     return parser
@@ -33,13 +34,12 @@ if __name__ == "__main__":
     data_path = os.path.abspath(data_path) + '/'
 
     #get query image name and vector
-    print(data_path + args.image_name)
+    query_path = data_path + args.image_name
     query_path, query_vector = get_all_vectors(f={
         'path': {
-            '$eq': data_path + args.image_name
+            '$eq': query_path
         }
     })
-    print(query_vector)
 
     # Get all vectors and run dim reduction on them.
     # Also pass query vector to apply the same scale and dim reduction transformation
@@ -50,5 +50,12 @@ if __name__ == "__main__":
         args.feature_reduction_technique,
         query_vector = query_vector[0].reshape(1, -1)
     )
-    print(reduced_dim_vectors.shape)
-    print(reduced_query_vector.shape)
+    
+    distances = distance(reduced_dim_vectors, reduced_query_vector, 0)
+    ranks = [(all_images[i], distances[i]) for i in range(len(distances))]
+    ranks.sort(key = lambda t: t[1])
+    write_to_file("op_temp.html",
+        "{}-{}.html".format(args.image_name, args.model),
+        ranks=ranks,
+        key=query_path[0],
+        title="TEST")

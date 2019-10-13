@@ -1,18 +1,14 @@
 import numpy as np
-from pymongo import MongoClient
-from multiprocessing import Pool
 import argparse
 from dynaconf import settings
-from pprint import pprint
 import sys
 import os
 
 sys.path.append('../')
 from output import write_to_file
 from metric.distance import distance
-from feature.moment import get_all_vectors
 from feature_reduction.feature_reduction import reducer
-from utils import get_term_weight_pairs, get_all_vectors
+from utils import get_term_weight_pairs, get_all_vectors, filter_images
 
 
 def prepare_parser():
@@ -20,6 +16,7 @@ def prepare_parser():
     parser.add_argument('-m', '--model', type=str, required=True)
     parser.add_argument('-k', '--k_latent_semantics', type=int, required=True)
     parser.add_argument('-frt', '--feature_reduction_technique', type=str, required=True)
+    parser.add_argument('-l', '--label', type=str, required=True)
     parser.add_argument('-n', '--related_images', type=int, required=True)
     parser.add_argument('-i', '--image_name', type=str, required=True)
     parser.add_argument('-d', '--data_path', type=str)
@@ -42,11 +39,18 @@ if __name__ == "__main__":
         }
     })
 
-    # Get all vectors and run dim reduction on them.
+    # Use filter_images to filter all vectors query and run dim reduction on them.
     # Also pass query vector to apply the same scale and dim reduction transformation
-    all_images, all_vectors = get_all_vectors(args.model)
+    label_images = filter_images(args.label)
+    label_images, label_vectors = get_all_vectors(args.model, f={
+        'path': {
+            '$in': label_images
+        }
+    })
+
+    #Run dimensionality reduction across label vectors and pass the query vector to apply the same to it as well.
     reduced_dim_vectors, _, _, reduced_query_vector = reducer(
-        all_vectors,
+        label_vectors,
         args.k_latent_semantics,
         args.feature_reduction_technique,
         query_vector = query_vector[0].reshape(1, -1)
@@ -54,7 +58,7 @@ if __name__ == "__main__":
     
     #calculate distance measures across every image in the reduced label vector set.
     distances = distance(reduced_dim_vectors, reduced_query_vector, 0)
-    ranks = [(all_images[i], distances[i]) for i in range(len(distances))]
+    ranks = [(label_images[i], distances[i]) for i in range(len(distances))]
     ranks.sort(key = lambda t: t[1])
     write_to_file("op_temp.html",
         "{}-{}.html".format(args.image_name, args.model),

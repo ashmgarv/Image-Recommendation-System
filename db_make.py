@@ -11,7 +11,7 @@ from bson.binary import Binary
 import pickle
 from pathlib import Path
 from dynaconf import settings
-
+import pandas as pd
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
@@ -32,6 +32,21 @@ def process_sift_img(img_path):
     res['sift'] = Binary(pickle.dumps(res['sift'], protocol=2))
     return res
 
+def build_metadata_db(path):
+    #rebuilding accessories column and adding path column
+    image_metadata = pd.read_csv(settings.IMAGES.METADATA_CSV)
+    image_metadata['accessories'] = image_metadata['accessories'].replace( {0: 'without_acs',1: 'with_acs'})
+    image_metadata['path'] = path + image_metadata['imageName'].astype(str)
+    del image_metadata['imageName']
+
+    #clear collection and insert
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+    coll.delete_many({})
+    coll.insert_many(image_metadata.to_dict('records'))
 
 def build_db(model, data_path, coll_name):
     """
@@ -91,6 +106,11 @@ if __name__ == "__main__":
         if (not path.exists() or not path.is_dir()):
             raise Exception("Invalid path provided.")
     coll_name = args.collection
+
+    print("inserting metadata")
+    build_metadata_db(args.data_path)
+    print("finished")
+
 
     build_db(args.model, None if not args.data_path else path,
              None if not args.collection else coll_name)

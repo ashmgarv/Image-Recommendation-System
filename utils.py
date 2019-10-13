@@ -1,6 +1,9 @@
 import os
 import shutil
 from subprocess import Popen, PIPE, STDOUT
+import pandas as pd
+from pymongo import MongoClient
+from dynaconf import settings
 
 
 def talk(args, path, stdout=True, stdin=False, dry_run=False):
@@ -39,3 +42,42 @@ def talk(args, path, stdout=True, stdin=False, dry_run=False):
         out,
         err,
     )
+
+def filter_images(label):
+    """filters images based on label
+    
+    Arguments:
+        data_directory {str} -- directory of hands data with trailing /
+        label {str} -- valid label to filter
+    
+    Returns:
+        list -- list of image paths with given label
+    """
+    #map on which column to check based on filter values
+    filter_to_column = {
+        'left': 'aspectOfHand',
+        'right': 'aspectOfHand',
+        'dorsal': 'aspectOfHand',
+        'palmar': 'aspectOfHand',
+        'male': 'gender',
+        'female': 'gender',
+        'with_acs': 'accessories',
+        'without_acs': 'accessories'
+    }
+    if label not in filter_to_column.keys():
+        raise Exception('invalid filter. valid filters are ' + ', '.join(list(filter_to_column.keys())))
+
+    #get image paths where the filter holds true
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+    column = filter_to_column[label]
+    
+    filter_image_paths = []
+    for row in coll.find({column: {'$regex': label}}, {'path':1}):
+        print(row['path'])
+        filter_image_paths.append(row['path'])
+    return filter_image_paths
+

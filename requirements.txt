@@ -5,3 +5,4 @@ pymongo==3.9.0
 Jinja2==2.10.1
 tqdm==4.35.0
 numpy==1.17.2
+scikit-image

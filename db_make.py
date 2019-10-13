@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 from tqdm import tqdm, trange
 from multiprocessing import Pool
-from feature import moment, sift
+from feature import moment, sift, lbp
 
 from pymongo import MongoClient
 from bson.binary import Binary
@@ -31,6 +31,11 @@ def process_moment_img(img_path):
 def process_sift_img(img_path):
     res = sift.process_img(img_path.resolve(), bool(settings.SIFT.USE_OPENCV))
     res['sift'] = Binary(pickle.dumps(res['sift'], protocol=2))
+    return res
+
+def process_lbp_img(img_path):
+    res = lbp.process_img(img_path.resolve())
+    res ['lbp'] = Binary(pickle.dumps(res['sift'], protocol=2))
     return res
 
 
@@ -69,6 +74,8 @@ def build_db(model, data_path, coll_name):
         fun = process_moment_img
     elif model == "sift":
         fun = process_sift_img
+    elif model == "lbp":
+        fun = process_lbp_img
     else:
         return
 

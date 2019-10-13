@@ -11,8 +11,6 @@ from feature.moment import get_all_vectors as get_all_moment_vectors
 from feature_reduction.feature_reduction import get_pca
 from feature_reduction.utils import get_term_weight_pairs
 
-
-
 def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
@@ -21,18 +19,6 @@ def prepare_parser():
     return parser
 
 def get_all_vectors(model):
-    """[summary]
-    
-    Arguments:
-        model {[type]} -- [description]
-    
-    Returns:
-        [type] -- [description]
-    """
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
 
     if model == 'moment':
         coll_name = settings.MOMENT.collection

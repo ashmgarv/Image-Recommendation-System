@@ -213,7 +213,7 @@ def get_all_vectors(coll, filter=None):
         v_moments = pickle.loads(row['v_moments'])
         all_vectors.append(np.concatenate((y_moments,u_moments,v_moments), axis=1).flatten())
 
-    return all_image_names, all_vectors
+    return all_image_names, np.array(all_vectors)
 
 class CompareMoment(object):
 

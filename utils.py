@@ -5,7 +5,7 @@ import pandas as pd
 from pymongo import MongoClient
 from dynaconf import settings
 
-from feature import moment, sift
+from feature import moment, sift, lbp
 
 
 def dummy(*args, **kwargs):
@@ -26,8 +26,8 @@ vectors_getters = {
         "func": sift.get_all_vectors
     },
     "lbp": {
-        "coll": None,
-        "func": dummy
+        "coll": settings.LBP.collection,
+        "func": lbp.get_all_vectors
     },
     "hog": {
         "coll": None,

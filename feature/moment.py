@@ -208,7 +208,7 @@ def get_all_vectors(coll, f={}):
     all_vectors = []
     for row in coll.find({}):
         all_image_names.append(row['path'])
-        moments = pickle.loads(row['moments'])
+        moments = pickle.loads(row['moments']).flatten()
         all_vectors.append(moments)
 
     return all_image_names, np.array(all_vectors)

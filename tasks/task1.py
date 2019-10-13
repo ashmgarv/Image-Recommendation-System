@@ -8,7 +8,7 @@ import sys
 
 sys.path.append('../')
 from feature.moment import get_all_vectors as get_all_moment_vectors
-from feature_reduction.feature_reduction import get_pca
+from feature_reduction.feature_reduction import reducer
 from feature_reduction.utils import get_term_weight_pairs
 
 def prepare_parser():
@@ -48,7 +48,11 @@ if __name__ == '__main__':
                          password=settings.PASSWORD)
     images, vectors = get_all_vectors(args.model)
     
-    if args.feature_reduction_technique == 'pca':
-        pca_vectors, pca, std_scaler = get_pca(vectors, args.k_latent_semantics)
-        pprint(get_term_weight_pairs(pca.components_), indent=4)
+    # reducer automatically maps feature_reduction_technique to the right function
+    vectors, eigen_values, latent_vs_old = reducer(
+        vectors, 
+        args.k_latent_semantics, 
+        args.feature_reduction_technique
+    )
+    pprint(get_term_weight_pairs(latent_vs_old), indent=4)
     

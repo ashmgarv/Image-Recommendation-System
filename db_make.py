@@ -26,6 +26,11 @@ def process_moment_img(img_path):
     res["moments"] = Binary(pickle.dumps(res["moments"], protocol=2))
     return res
 
+def process_moment_inv_img(img_path):
+    res = moment.process_img(img_path.resolve(), settings.WINDOW.WIN_HEIGHT,
+                             settings.WINDOW.WIN_WIDTH, True)
+    res["moments"] = Binary(pickle.dumps(res["moments"], protocol=2))
+    return res
 
 def process_sift_img(img_path):
     res = sift.process_img(img_path.resolve(), bool(settings.SIFT.USE_OPENCV))
@@ -74,6 +79,8 @@ def build_db(model, data_path, coll_name):
     if coll_name is None:
         if model == "moment":
             coll_name = settings.MOMENT.COLLECTION
+        elif model == "moment_inv":
+            coll_name = settings.MOMENT.COLLECTION_INV
         elif model == "sift":
             coll_name = settings.SIFT.COLLECTION
         else:
@@ -92,6 +99,8 @@ def build_db(model, data_path, coll_name):
 
     if model == "moment":
         fun = process_moment_img
+    elif model == "moment_inv":
+        fun = process_moment_inv_img
     elif model == "sift":
         fun = process_sift_img
     elif model == "lbp":

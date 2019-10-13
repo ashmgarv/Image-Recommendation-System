@@ -6,7 +6,7 @@ port = 27017
 host = "localhost"
 database = "db"
 # Path to the dataset
-data_path = "../Data/Hands/"
+data_path = "../../Data/Hands/"
 # Path to the output
 output_path = "../Outputs/"
 

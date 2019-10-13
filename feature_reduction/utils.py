@@ -1,3 +1,23 @@
+from feature.moment import get_all_vectors as get_all_moment_vectors
+
+def get_all_vectors(model, f={}):
+    """get all vectors present in the model
+    
+    Arguments:
+        model {str} -- model name : sift, moment, hog, lbp
+    
+    Returns:
+        image_labels, vectors -- array of image names and corresponding vectors (2 variables)
+    """
+    if model == 'moment':
+        return get_all_moment_vectors(f=f)
+    if model == 'sift':
+        pass
+    if model == 'hog':
+        pass
+    if model == 'lbp':
+        pass
+
 def get_term_weight_pairs(components):
     """returns array of weights of original features for each latent dimension
     

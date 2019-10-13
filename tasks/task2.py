@@ -12,7 +12,7 @@ from output import write_to_file
 from metric.distance import distance
 from feature.moment import get_all_vectors
 from feature_reduction.feature_reduction import reducer
-from feature_reduction.utils import get_term_weight_pairs
+from utils import get_term_weight_pairs, get_all_vectors
 
 
 def prepare_parser():
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     #get query image name and vector
     query_path = data_path + args.image_name
-    query_path, query_vector = get_all_vectors(f={
+    query_path, query_vector = get_all_vectors(args.model, f={
         'path': {
             '$eq': query_path
         }
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # Get all vectors and run dim reduction on them.
     # Also pass query vector to apply the same scale and dim reduction transformation
-    all_images, all_vectors = get_all_vectors()
+    all_images, all_vectors = get_all_vectors(args.model)
     reduced_dim_vectors, _, _, reduced_query_vector = reducer(
         all_vectors,
         args.k_latent_semantics,

@@ -15,11 +15,18 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', type=str, required=True)
     parser.add_argument('-k', '--k_latent_semantics', type=int, required=True)
-    parser.add_argument('-fdr','--fdr_technique', type=str, required=True)
+    parser.add_argument('-frt','--feature_reduction_technique', type=str, required=True)
     return parser
 
 def get_all_vectors(model):
-
+    """get all vectors present in the model
+    
+    Arguments:
+        model {str} -- model name : sift, moment, hog, lbp
+    
+    Returns:
+        image_labels, vectors -- array of image names and corresponding vectors (2 variables)
+    """
     if model == 'moment':
         coll_name = settings.MOMENT.collection
         coll = client.db[coll_name]
@@ -39,11 +46,9 @@ if __name__ == '__main__':
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-
     images, vectors = get_all_vectors(args.model)
     
-    if args.fdr_technique == 'pca':
-        _, pca, _ = get_pca(vectors, args.k_latent_semantics)
-        # print(np.sum(pca.explained_variance_ratio_))
+    if args.feature_reduction_technique == 'pca':
+        pca_vectors, pca, std_scaler = get_pca(vectors, args.k_latent_semantics)
         pprint(get_term_weight_pairs(pca.components_), indent=4)
     

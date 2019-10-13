@@ -118,15 +118,7 @@ def process_img(img_path, win_h, win_w, invert=False):
 
 
 
-def get_all_vectors(f={}):
-
-    client = MongoClient(host=settings.HOST,
-                         port=settings.PORT,
-                         username=settings.USERNAME,
-                         password=settings.PASSWORD)
-    coll_name = settings.MOMENT.collection
-    coll = client.db[coll_name]
-
+def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
     for row in coll.find(f):

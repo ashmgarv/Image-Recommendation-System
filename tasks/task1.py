@@ -8,9 +8,8 @@ import sys
 
 sys.path.append('../')
 import output
-from feature_reduction.utils import get_all_vectors
+from utils import get_all_vectors, get_term_weight_pairs
 from feature_reduction.feature_reduction import reducer
-from feature_reduction.utils import get_term_weight_pairs
 
 
 def prepare_parser():

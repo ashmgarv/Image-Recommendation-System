@@ -137,3 +137,6 @@ def visualize_sift(img_path, op_path):
     cv2.imwrite(
         str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
 
+
+def get_all_vectors(f={}):
+    pass

@@ -203,15 +203,13 @@ def visualize_moments(img_path, op_path, win_h, win_w):
     cv2.imwrite(str(op_path / '{}_v.png'.format(img_path.resolve().name)),
                 result_v)
 
-def get_all_vectors(coll, filter=None):
+def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
     for row in coll.find({}):
         all_image_names.append(row['path'])
-        y_moments = pickle.loads(row['y_moments'])
-        u_moments = pickle.loads(row['u_moments'])
-        v_moments = pickle.loads(row['v_moments'])
-        all_vectors.append(np.concatenate((y_moments,u_moments,v_moments), axis=1).flatten())
+        moments = pickle.loads(row['moments'])
+        all_vectors.append(moments)
 
     return all_image_names, np.array(all_vectors)
 

@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 from tqdm import tqdm, trange
 from multiprocessing import Pool
-from feature import moment, sift
+from feature import moment, sift, lbp
 
 from pymongo import MongoClient
 from bson.binary import Binary
@@ -32,7 +32,17 @@ def process_sift_img(img_path):
     res['sift'] = Binary(pickle.dumps(res['sift'], protocol=2))
     return res
 
+def process_lbp_img(img_path):
+    res = lbp.process_img(img_path.resolve())
+    res['lbp'] = Binary(pickle.dumps(res['sift'], protocol=2))
+    return res
+
 def build_metadata_db(path):
+    """function that read metadata file and populated mongoDB
+    
+    Arguments:
+        path {str} -- path of datafolder to append to filenames (easier to filter)
+    """
     #rebuilding accessories column and adding path column
     image_metadata = pd.read_csv(settings.IMAGES.METADATA_CSV)
     image_metadata['accessories'] = image_metadata['accessories'].replace( {0: 'without_acs',1: 'with_acs'})
@@ -47,7 +57,6 @@ def build_metadata_db(path):
     coll = client.db[settings.IMAGES.METADATA_COLLECTION]
     coll.delete_many({})
     coll.insert_many(image_metadata.to_dict('records'))
-
 def build_db(model, data_path, coll_name):
     """
     Extracts features from all the images given in the dataset and stores it in the Database
@@ -83,6 +92,8 @@ def build_db(model, data_path, coll_name):
         fun = process_moment_img
     elif model == "sift":
         fun = process_sift_img
+    elif model == "lbp":
+        fun = process_lbp_img
     else:
         return
 

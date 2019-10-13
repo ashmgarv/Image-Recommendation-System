@@ -36,7 +36,7 @@ output_path = "../Outputs/"
   # Format is - W_Y_1, W_Y_2, W_Y_3, W_U_1, W_U_2, W_U_3, W_V_1, W_V_2, W_V_3
   # Must be in double format.
     weights = [3.0, 3.0, 3.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-  
+
   [default.images]
   metadata_csv = "../Data/HandInfo.csv"
   metadata_collection = 'metadata'

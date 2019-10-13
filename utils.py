@@ -77,7 +77,6 @@ def filter_images(label):
     
     filter_image_paths = []
     for row in coll.find({column: {'$regex': label}}, {'path':1}):
-        print(row['path'])
         filter_image_paths.append(row['path'])
     return filter_image_paths
 

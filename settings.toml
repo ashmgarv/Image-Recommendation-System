@@ -36,6 +36,6 @@ output_path = "../Outputs/"
     weights = [3.0, 3.0, 3.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
   
   [default.images]
-  metadata_csv = "./HandInfo.csv"
+  metadata_csv = "../Data/HandInfo.csv"
   metadata_collection = 'metadata'
 

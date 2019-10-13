@@ -57,6 +57,7 @@ def build_metadata_db(path):
     coll = client.db[settings.IMAGES.METADATA_COLLECTION]
     coll.delete_many({})
     coll.insert_many(image_metadata.to_dict('records'))
+
 def build_db(model, data_path, coll_name):
     """
     Extracts features from all the images given in the dataset and stores it in the Database

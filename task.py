@@ -80,6 +80,60 @@ def calc_sim(img_path, k, model_name):
     res = c.compare_many(coll.find(), coll.count_documents({}))
     return res[:k]
 
+def task_1(img_path, model, k):
+    client = MongoClient('mongodb://localhost:27017/')
+    coll = client.db["img_moment_inv"]
+    data = list(coll.find())
+
+    # Metadata
+    # hand_meta = list(client.db.hands_meta.find({"gender": "male"}))
+    hand_meta = list(client.db.hands_meta.find())
+    hand_meta = {i['imageName']: {
+        "id": i["id"],
+        "aspectOfHand": i["aspectOfHand"],
+        "age": i["age"],
+        "gender": i["gender"],
+        "skinColor": i["skinColor"],
+        "accessories": i["accessories"],
+        "nailPolish": i["nailPolish"],
+        "irregularities": i["irregularities"]
+        } for i in hand_meta}
+
+    # filter
+    data = [d for d in data if d['path'].split("/")[-1] in hand_meta]
+    meta = {i['path']: idx for idx,i in enumerate(data)}
+    meta_rev = {idx: i['path'] for idx, i in enumerate(data)}
+
+    data = [pickle.loads(i['moments']) for i in data]
+    data = [i.flatten() for i in data]
+    data = np.array(data)
+
+    # NMF
+    inc = np.amin(data.flatten())
+    if inc < 0:
+        data += (-1 * inc)
+
+    nmf = NMF(n_components=20, init='random', random_state=0)
+    u = nmf.fit_transform(data)
+    h = nmf.components_
+
+    # image path with a vector in the latent semantic space
+    data_z = zip(meta, u[:,:20])
+    # data_z = list(data_z)[:10]
+    # image path for each latenet semantic in h
+    feature_z = [(idx, meta_rev[np.argmax(np.dot(u[:,:20], i[:20]))]) for idx, i in enumerate(h)]
+
+    output.write_to_file("visualize_data_z.html",
+                         "data-z-{}-{}-nmf.html".format(img_path.resolve().name, model),
+                         data_z=data_z,
+                         title="TEST")
+
+    output.write_to_file("visualize_feat_z.html",
+                         "feat-z-{}-{}-nmf.html".format(img_path.resolve().name, model),
+                         feature_z=feature_z,
+                         title="TEST")
+
+
 def calc_svd_sim(img_path, k):
     client = MongoClient('mongodb://localhost:27017/')
     coll = client.db["img_moment_inv"]
@@ -141,6 +195,7 @@ def calc_svd_sim(img_path, k):
 
     model = NMF(n_components=20, init='random', random_state=0)
     u = model.fit_transform(data)
+    h = model.components_
     dims = u.shape[1]
 
     img_desc = u[meta[str(img_path)]]
@@ -203,68 +258,31 @@ def task_8(k):
     h = model.components_
 
 
-
 def task_7(k):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     hand_meta = list(client.db.hands_meta.find())
-    subjects = {}
-    for meta in hand_meta:
-        temp = []
-        temp.append(meta["age"])
-        temp.append(0 if meta["gender"] == "male" else 1)
-        if meta["skinColor"] == "fair":
-            temp.append(0)
-        elif meta["skinColor"] == "dark":
-            temp.append(1)
-        elif meta["skinColor"] == "medium":
-            temp.append(2)
-        elif meta["skinColor"] == "very fair":
-            temp.append(3)
-        else:
-            print("GOT {}".format(meta["skinColor"]))
-            raise Exception
 
-        subjects[meta["id"]] = temp
+    try:
+        subjects = { meta['id']: [
+            meta['age'],
+            mapping[meta['gender']],
+            mapping[meta['skinColor']]
+        ] for meta in hand_meta }
+    except KeyError:
+        raise Exception("Invalid metadata detected")
+        return
 
     subs = np.array([subjects[v] for v in subjects])
 
     # Generate subject, subject similarity
-    # sub_sub = np.matmul(subs, subs.T)
-    sub_sub = []
-    for sub1 in subs:
-        temp = []
-        for sub2 in subs:
-            # Euclidean
-            d = np.sqrt(np.sum(np.power(sub1 - sub2, 2)))
-            if d != 0:
-                d = 1 / d
-
-            # Manhattan
-            # d = np.sum(sub1 - sub2)
-            # if d != 0:
-            #     d = 1 / d
-
-            # Pearsons Corelation, rev
-            # d = np.corrcoef(sub1, sub2)[0,1]
-
-            # Cosine Similarity, rev
-            # d = np.dot(sub1, sub2)/(np.linalg.norm(sub1) * np.linalg.norm(sub2))
-
-            # Intersection similarity, rev
-            # ma = sum([max(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
-            # mi = sum([min(sub1[j], sub2[j]) for j in range(0, sub1.shape[0])])
-            # d = mi/float(ma)
-
-            temp.append(d)
-        sub_sub.append(temp)
-
-    sub_sub = np.array(sub_sub)
+    sub_sub = np.array([distance.similarity(subs, s, distance.EUCLIDEAN) for s in subs])
 
     model = NMF(n_components=20, init='random', random_state=0)
     u = model.fit_transform(sub_sub)
+    h = model.components_
 
 if __name__ == "__main__":
     parser = prepare_parser()
@@ -278,16 +296,16 @@ if __name__ == "__main__":
         raise Exception("Need k > 0")
 
     s = timeit.default_timer()
-    ranks = calc_sim(img_path, args.k_nearest, args.model)
     # ranks = calc_sim(img_path, args.k_nearest, args.model)
     # ranks = calc_svd_sim(img_path, args.k_nearest)
     # ranks = task_8(args.k_nearest)
     # ranks = task_7(args.k_nearest)
+    task_1(img_path, args.model, args.k_nearest)
     e = timeit.default_timer()
     print("Took {} to calculate".format(e - s))
 
-    output.write_to_file("op_temp.html",
-                         "{}-{}.html".format(img_path.resolve().name, args.model),
-                         ranks=ranks,
-                         key=str(img_path),
-                         title="TEST")
+    # output.write_to_file("op_temp.html",
+    #                      "{}-{}.html".format(img_path.resolve().name, args.model),
+    #                      ranks=ranks,
+    #                      key=str(img_path),
+    #                      title="TEST")

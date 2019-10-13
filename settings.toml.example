@@ -8,7 +8,7 @@ database = "db"
 # Path to the dataset
 data_path = "../../Data/Hands/"
 # Path to the output
-output_path = "../Outputs/"
+output_path = "../../Outputs/"
 
   [default.sift]
   # The colletion to store sift data

@@ -6,7 +6,7 @@ from dynaconf import settings
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
 
-env = Environment(loader=FileSystemLoader('templates'))
+env = Environment(loader=FileSystemLoader('../templates'))
 
 
 def write_to_file(tmp, file_name, **kwargs):

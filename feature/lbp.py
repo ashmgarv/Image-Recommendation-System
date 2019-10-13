@@ -1,10 +1,10 @@
-import mahotas as mh
 from skimage import feature
 import numpy as np
+import cv2
 
 
 def process_img(img_path):
-    img = mh.imread(str(img_path), as_grey=True)
+    img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
     lbp_feature_vector = []
 
     # Turn the image into 100 * 100 smaller np arrays
@@ -28,8 +28,5 @@ def process_img(img_path):
 def turn_into_100c100(arr, nrows, ncols):
     h, w = arr.shape
     return (arr.reshape(h // nrows, nrows, -1, ncols).swapaxes(1, 2).reshape(-1, nrows, ncols))
-
-
-
 
 

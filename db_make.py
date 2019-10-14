@@ -40,7 +40,7 @@ def process_sift_img(img_path):
 
 def process_lbp_img(img_path):
     res = lbp.process_img(img_path.resolve())
-    res['lbp'] = Binary(pickle.dumps(res['sift'], protocol=2))
+    res['lbp'] = Binary(pickle.dumps(res['lbp'], protocol=2))
     return res
 
 def build_metadata_db(path):
@@ -88,8 +88,9 @@ def build_db(model, data_path, coll_name):
             coll_name = settings.MOMENT.COLLECTION_INV
         elif model == "sift":
             coll_name = settings.SIFT.COLLECTION
-        else:
-            return
+        elif model == "lbp":
+            coll_name = settings.LBP.collection
+        else: return
 
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,

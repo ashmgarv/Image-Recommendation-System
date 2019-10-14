@@ -50,10 +50,11 @@ def build_metadata_db(path):
         path {str} -- path of datafolder to append to filenames (easier to filter)
     """
     if path is None:
-        path = Path(settings.DATA_PATH)
+        path = Path(settings.path_for(settings.DATA_PATH))
 
     #rebuilding accessories column and adding path column
-    image_metadata = pd.read_csv(settings.IMAGES.METADATA_CSV)
+    metadata_path = Path(settings.path_for(settings.METADATA_CSV))
+    image_metadata = pd.read_csv(str(metadata_path.resolve()))
     image_metadata['accessories'] = image_metadata['accessories'].replace( {0: 'without_acs',1: 'with_acs'})
     image_metadata['path'] = str(path.resolve()) + os.sep + image_metadata['imageName'].astype(str)
     del image_metadata['imageName']
@@ -78,7 +79,7 @@ def build_db(model, data_path, coll_name):
         coll_name: Collection name in which to store data.
     """
     if data_path is None:
-        data_path = Path(settings.DATA_PATH)
+        data_path = Path(settings.path_for(settings.DATA_PATH))
 
     if coll_name is None:
         if model == "moment":

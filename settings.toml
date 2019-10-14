@@ -6,10 +6,15 @@ port = 27017
 host = "localhost"
 database = "db"
 # Path to the dataset
-data_path = "../../Data/Hands/"
+data_path = "../Data/Hands/"
 # Path to the output
-output_path = "../../Outputs/"
+output_path = "../Outputs/"
+# Path to templates
+template_path = "templates"
+# Path to metadata
+metadata_csv = "../Data/HandInfo.csv"
 
+# The feature models
   [default.sift]
   # The colletion to store sift data
     collection = "img_sift"
@@ -17,16 +22,6 @@ output_path = "../../Outputs/"
   # David Lowe
     use_opencv = 1
     bin_path = "./bin/sift"
-
-  [default.loader]
-  # Batch to operate on
-    batch_size = 1000
-
-  [default.window]
-  # Images are split into windows when calculating Image Moments. The two
-  # configuration specifies the dimensions of the window.
-    win_height = 100
-    win_width = 100
 
   [default.moment]
   # The colletion to store moments data
@@ -37,7 +32,17 @@ output_path = "../../Outputs/"
   # Must be in double format.
     weights = [3.0, 3.0, 3.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
+# Application configuration
+  [default.loader]
+  # Batch to operate on
+    batch_size = 1000
+
+  [default.window]
+  # Images are split into windows when calculating Image Moments. The two
+  # configuration specifies the dimensions of the window.
+    win_height = 100
+    win_width = 100
+
   [default.images]
-    metadata_csv = "../Data/HandInfo.csv"
     metadata_collection = 'metadata'
 

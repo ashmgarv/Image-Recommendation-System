@@ -20,17 +20,12 @@ def prepare_parser():
     parser.add_argument(
         '-frt', '--feature_reduction_technique', type=str, required=True)
     parser.add_argument('-l', '--label', type=str, required=True)
-    parser.add_argument('-d', '--data_path', type=str)
     return parser
 
 
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
-
-    #get the absolute data path
-    data_path = settings.DATA_PATH if args.data_path is None else args.data_path
-    data_path = os.path.abspath(data_path) + '/'
 
     #filter image
     paths = filter_images(args.label)

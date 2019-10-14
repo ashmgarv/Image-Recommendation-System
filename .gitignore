@@ -1,6 +1,7 @@
 */__pycache__/*
 __pycache__/*
 .idea/*
+venv/*
 .vscode
 *.DS_Store*
 *.pyc

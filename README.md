@@ -44,10 +44,6 @@ If you specify `CMAKE_INSTALL_PREFIX`, you need to export this install path to
 Just run pip install -r requirements.txt
 
 # Configuration
-**BEFORE YOU RUN**
-Copy the file `settings.toml.example` to `settings.toml` and make the required
-updates based on your system and configuration. THIS APPLICATION WILL NOT RUN
-CORRECTLY UNLESS YOU UPDATE THE CONFIGURATION.
 The configuration can be edited in `settings.toml`. There are comments in the
 file describing each of the configurations. To get this program running, it is
 enough to provide `username`, `password`, `host`, `port`, `data_path`.

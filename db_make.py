@@ -40,7 +40,7 @@ def process_sift_img(img_path):
 
 def process_lbp_img(img_path):
     res = lbp.process_img(img_path.resolve())
-    res['lbp'] = Binary(pickle.dumps(res['sift'], protocol=2))
+    res['lbp'] = Binary(pickle.dumps(res['lbp'], protocol=2))
     return res
 
 def build_metadata_db(path):

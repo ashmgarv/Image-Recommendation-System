@@ -13,17 +13,17 @@ If you send in anything else, I don't know what will happen. So don't.
 
 def pearsons(vec1, vec2):
     if len(vec1.shape) == 2:
-        return np.corrcoef(sub1, sub2)[:-1,-1]
-    return np.corrcoef(sub1, sub2)[0,1]
+        return np.corrcoef(vec1, vec2)[:-1,-1]
+    return np.corrcoef(vec1, vec2)[0,1]
 
 
 def cosine(vec1, vec2):
-    if len(vec1.shape == 2):
+    if len(vec1.shape) == 2:
         return np.apply_along_axis(np.dot, 1, vec1, vec2) / (np.apply_along_axis(np.linalg.norm, 1, vec1) * np.linalg.norm(vec2))
     return np.dot(vec1, vec2)/(np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
-def intersection(vec1, vec2)
+def intersection(vec1, vec2):
     if len(vec1.shape) == 2:
         return np.minimum(vec1, vec2).sum(axis=1) / float(np.maximum(vec1, vec2).sum(axis=1))
     return np.minimum(vec1, vec2).sum() / float(np.maximum(vec1, vec2).sum())

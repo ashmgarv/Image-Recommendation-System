@@ -30,10 +30,31 @@ opt = [
     manhattan,
 ]
 
+
 def distance(vec1, vec2, t):
     return opt[t](vec1, vec2)
 
+
+# Perhaps this is buggy
+# Now the problem is that if distance is 1, we cant possibly take 1/d as the
+# similarity score.
 def similarity(vec1, vec2, t):
     d = opt[t](vec1, vec2)
-    temp = np.where(1 - d < 0, d, np.absolute(1 - d))
-    return np.reciprocal(temp, where=temp!=0, dtype=np.float16)
+    # temp = np.where(1 - d < 0, d, np.absolute(1 - d))
+    # res = np.reciprocal(temp, where=temp!=0, dtype=np.float16)
+
+    # # Convert all 0 distances to similarity 1
+    # d[np.abs(d) < np.finfo(np.float).eps] = 1.0
+    # # Take reciprocal of distances. Similarity = 1/d
+    # res = np.reciprocal(d, where=d!=0.0, dtype=np.float16)
+    # # squish the bugs
+    # if any(np.isnan(res)):
+    #     import pdb
+    #     pdb.set_trace()
+    #     res = np.nan_to_num(res, copy=False, nan=1.0)
+    # return res
+
+    # https://stats.stackexchange.com/questions/158279/how-i-can-convert-distance-euclidean-to-similarity-score
+    # http://www.uco.es/users/ma1fegan/Comunes/asignaturas/vision/Encyclopedia-of-distances-2009.pdf
+    # https://stats.stackexchange.com/questions/53068/euclidean-distance-score-and-similarity
+    return 1 / (1 + d)

@@ -5,11 +5,12 @@ import argparse
 from dynaconf import settings
 from pprint import pprint
 import sys
+import os
 
 sys.path.append('../')
 import output
-from utils import get_all_vectors, get_term_weight_pairs
 from feature_reduction.feature_reduction import reducer
+from utils import get_term_weight_pairs, get_all_vectors, filter_images
 
 
 def prepare_parser():
@@ -18,27 +19,40 @@ def prepare_parser():
     parser.add_argument('-k', '--k_latent_semantics', type=int, required=True)
     parser.add_argument(
         '-frt', '--feature_reduction_technique', type=str, required=True)
+    parser.add_argument('-l', '--label', type=str, required=True)
+    parser.add_argument('-d', '--data_path', type=str)
     return parser
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
 
-    images, vectors = get_all_vectors(args.model)
+    #get the absolute data path
+    data_path = settings.DATA_PATH if args.data_path is None else args.data_path
+    data_path = os.path.abspath(data_path) + '/'
 
-    # reducer automatically maps feature_reduction_technique to the right function
+    #filter image
+    paths = filter_images(args.label)
+
+    #get query image name and vector
+    images, vectors = get_all_vectors(args.model, f={
+        'path': {
+            '$in': paths
+        }
+    })
+
+    # Get all vectors and run dim reduction on them.
     vectors, eigen_values, latent_vs_old = reducer(
         vectors, args.k_latent_semantics, args.feature_reduction_technique)
 
-    pprint(get_term_weight_pairs(vectors), indent=4)
-    pprint(get_term_weight_pairs(latent_vs_old), indent=4)
+    pprint(vectors.tolist(), indent=4)
 
     # # Extra Credit
     # # image path with a vector in the latent semantic space
     # data_z = zip(images, vectors)
     # # image path for each latenet semantic in h
-    # feature_z = [(idx, images[np.argmax(np.dot(vectors, i[:args.k_latent_semantics]))]) for idx, i in enumerate(latent_vs_old)]
+    # feature_z = [(idx, images[np.argmax(np.dot(vectors, i.T))]) for idx, i in enumerate(latent_vs_old)]
 
     # output.write_to_file("visualize_data_z.html",
     #                      "data-z-{}-{}.html".format(args.model, args.feature_reduction_technique),

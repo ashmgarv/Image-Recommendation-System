@@ -1,5 +1,4 @@
 import timeit
-import utils
 import cv2
 import numpy as np
 
@@ -8,6 +7,44 @@ from pymongo import MongoClient
 
 import copyreg
 import pickle
+
+
+def talk(args, path, stdout=True, stdin=False, dry_run=False):
+    """
+    Execute a process with a command.
+    Args:
+        args: Command to run
+        path: Path to run the command in
+        stdout: Capture the STDOUT and return
+        stdin: Send input to the command
+        dry_run: Don't execute the command
+
+    Returns:
+        Returns a tuple of (return code, the output of the command in STDOUT and the output of STDERR,)
+    """
+    # print("Running command: {}".format(" ".join(args)))
+    if dry_run:
+        return 0, None
+
+    p = Popen(args,
+              cwd=path,
+              stdout=None if stdout == False else PIPE,
+              stdin=None if stdin == False else PIPE,
+              stderr=PIPE)
+    if stdin:
+        comm = p.communicate(stdin)
+    elif stdout:
+        comm = p.communicate()
+    else:
+        return (p.returncode, None, None)
+
+    out, err = None if comm[0] == None else comm[0].decode(
+        "utf-8"), None if comm[1] == None else comm[1].decode("utf-8")
+    return (
+        p.returncode,
+        out,
+        err,
+    )
 
 
 # Taken from https://stackoverflow.com/a/48832618
@@ -90,7 +127,7 @@ def img_sift(img_path, sift_opencv):
 
     img_data = cv2.imencode(".pgm", img_gray)[1].tostring()
 
-    ret, out, err = utils.talk([settings.SIFT.BIN_PATH],
+    ret, out, err = talk([settings.SIFT.BIN_PATH],
                                settings._root_path,
                                stdin=img_data,
                                stdout=True)
@@ -138,5 +175,5 @@ def visualize_sift(img_path, op_path):
         str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
 
 
-def get_all_vectors(f={}):
+def get_all_vectors(coll, f={}):
     pass

@@ -43,7 +43,7 @@ def get_svd(vectors, k, **opts):
     scaled_values = std_scaler.fit_transform(vectors)
 
     svd_vectors, eigenvalues, latent_vs_old_features = np.linalg.svd(scaled_values, full_matrices=False)
-    return svd_vectors[:,:k], eigenvalues[:k], latent_vs_old_features[:,:k].T
+    return svd_vectors[:,:k], eigenvalues[:k], latent_vs_old_features[:k,:]
 
 
 def get_lda(vectors, k, **opts):

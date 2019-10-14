@@ -36,43 +36,6 @@ vectors_getters = {
 }
 
 
-def talk(args, path, stdout=True, stdin=False, dry_run=False):
-    """
-    Execute a process with a command.
-    Args:
-        args: Command to run
-        path: Path to run the command in
-        stdout: Capture the STDOUT and return
-        stdin: Send input to the command
-        dry_run: Don't execute the command
-
-    Returns:
-        Returns a tuple of (return code, the output of the command in STDOUT and the output of STDERR,)
-    """
-    # print("Running command: {}".format(" ".join(args)))
-    if dry_run:
-        return 0, None
-
-    p = Popen(args,
-              cwd=path,
-              stdout=None if stdout == False else PIPE,
-              stdin=None if stdin == False else PIPE,
-              stderr=PIPE)
-    if stdin:
-        comm = p.communicate(stdin)
-    elif stdout:
-        comm = p.communicate()
-    else:
-        return (p.returncode, None, None)
-
-    out, err = None if comm[0] == None else comm[0].decode(
-        "utf-8"), None if comm[1] == None else comm[1].decode("utf-8")
-    return (
-        p.returncode,
-        out,
-        err,
-    )
-
 def filter_images(label):
     """filters images based on label
     
@@ -120,6 +83,14 @@ def get_all_vectors(model, f={}):
     coll = client.db[inst["coll"]]
 
     return inst["func"](coll, f)
+
+
+def get_metadata(f={}):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    return list(client.db[settings.IMAGES.METADATA_COLLECTION].find(f))
 
 
 def get_term_weight_pairs(components):

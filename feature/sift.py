@@ -176,4 +176,12 @@ def visualize_sift(img_path, op_path):
 
 
 def get_all_vectors(coll, f={}):
-    pass
+    all_image_names = []
+    all_vectors = []
+    for row in coll.find(f):
+        all_image_names.append(row['path'])
+        descriptors = pickle.loads(row['sift'])[1]
+        all_vectors.append(descriptors)
+
+
+    return all_image_names, np.array(all_vectors)

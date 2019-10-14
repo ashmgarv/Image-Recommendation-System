@@ -46,3 +46,6 @@ metadata_csv = "../Data/HandInfo.csv"
   [default.images]
     metadata_collection = 'metadata'
 
+  [default.lbp]
+    collection = 'lbp'
+

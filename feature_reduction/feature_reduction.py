@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.decomposition import PCA, LatentDirichletAllocation, NMF
+from sklearn.decomposition import PCA, LatentDirichletAllocation, NMF, TruncatedSVD
 
 
 def get_pca(vectors, k, **opts):
@@ -42,8 +42,18 @@ def get_svd(vectors, k, **opts):
     std_scaler = StandardScaler()
     scaled_values = std_scaler.fit_transform(vectors)
 
-    svd_vectors, eigenvalues, latent_vs_old_features = np.linalg.svd(scaled_values, full_matrices=False)
-    return svd_vectors[:,:k], eigenvalues[:k], latent_vs_old_features[:k,:]
+    svd = TruncatedSVD(n_components=k)
+
+    svd_vectors = svd.fit_transform(scaled_values)
+
+    #if opts contains query vector, apply scaler and SVD transformation to the query vector and return
+    if opts:
+        query_vector = opts['query_vector']
+        scaled_query_vector = std_scaler.transform(query_vector)
+        svd_query_vector = svd.transform(scaled_query_vector)
+        return svd_vectors, svd.explained_variance_, svd.components_, svd_query_vector
+    else:
+        return svd_vectors, svd.explained_variance_, svd.components_
 
 
 def get_lda(vectors, k, **opts):

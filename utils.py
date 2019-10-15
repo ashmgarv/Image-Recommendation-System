@@ -5,8 +5,7 @@ import pandas as pd
 from pymongo import MongoClient
 from dynaconf import settings
 
-from feature import moment, sift, lbp
-
+from feature import moment, sift, lbp, hog
 
 def dummy(*args, **kwargs):
     raise NotImplementedError
@@ -30,8 +29,8 @@ vectors_getters = {
         "func": lbp.get_all_vectors
     },
     "hog": {
-        "coll": None,
-        "func": dummy
+        "coll": settings.HOG.collection,
+        "func": hog.get_all_vectors
     }
 }
 

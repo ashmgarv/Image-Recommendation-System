@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 from tqdm import tqdm, trange
 from multiprocessing import Pool
-from feature import moment, sift, lbp
+from feature import moment, sift, lbp, hog
 
 from pymongo import MongoClient
 from bson.binary import Binary
@@ -41,6 +41,11 @@ def process_sift_img(img_path):
 def process_lbp_img(img_path):
     res = lbp.process_img(img_path.resolve())
     res['lbp'] = Binary(pickle.dumps(res['lbp'], protocol=2))
+    return res
+
+def process_hog_img(img_path):
+    res = hog.process_img(img_path.resolve())
+    res['hog'] = Binary(pickle.dumps(res['hog'], protocol=2))
     return res
 
 def build_metadata_db(path):
@@ -88,6 +93,8 @@ def build_db(model, data_path, coll_name):
             coll_name = settings.MOMENT.COLLECTION_INV
         elif model == "sift":
             coll_name = settings.SIFT.COLLECTION
+        elif model == "hog":
+            coll_name = settings.HOG.COLLECTION
         elif model == "lbp":
             coll_name = settings.LBP.collection
         else: return
@@ -111,6 +118,8 @@ def build_db(model, data_path, coll_name):
         fun = process_sift_img
     elif model == "lbp":
         fun = process_lbp_img
+    elif model == "hog":
+        fun = process_hog_img
     else:
         return
 
@@ -123,6 +132,10 @@ def build_db(model, data_path, coll_name):
 
     if len(imgs) > 0:
         coll.insert_many(imgs)
+    
+    #if model is sift, generate and insert histogram vector
+    if model == 'sift':
+        sift.generate_histogram_vectors(coll)
 
 
 if __name__ == "__main__":

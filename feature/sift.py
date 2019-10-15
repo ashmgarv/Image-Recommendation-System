@@ -3,10 +3,16 @@ import cv2
 import numpy as np
 
 from dynaconf import settings
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
+from bson import Binary
+from sklearn.cluster import MiniBatchKMeans
 
 import copyreg
 import pickle
+import sys
+from tqdm import tqdm
+from functools import partial
+import multiprocessing as mp
 
 
 def talk(args, path, stdout=True, stdin=False, dry_run=False):
@@ -175,13 +181,91 @@ def visualize_sift(img_path, op_path):
         str(op_path / '{}_keypoints.jpg'.format(img_path.resolve().name)), img)
 
 
+#generates a dictionary of image_path to the subject id. {'Hand_x': 1, 'Hand_y':1, 'Hand_z':2.....}
+def get_path_to_subject_map(image_paths):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+
+    path_to_subject_map = {}
+    for row in coll.find({'path': {'$in': image_paths}}, {'id': 1, 'path': 1}):
+        path_to_subject_map[row['path']] = row['id']
+    
+    return path_to_subject_map
+
+
+#generates a single keypoint histogram vector for each image
+def get_histogram_vector(kmeans_cluster, subject_count, ordered_vector):
+    index = ordered_vector[0]
+    all_keypoints = ordered_vector[1]
+
+    histogram_vector = np.zeros(subject_count * 10)
+    kp_count = all_keypoints.shape[0]
+
+    for key_point in all_keypoints:
+        idx = kmeans_cluster.predict(key_point.reshape(1,-1))
+        histogram_vector[idx] += 1/kp_count
+
+    return (index, histogram_vector)
+
+
+def generate_histogram_vectors(coll):
+    # Fetch ids, image paths and descriptor arrays of all inserted hog vectors
+    print("fetching all keypoints....")
+    row_ids, image_paths, all_keypoints = [], [], []
+    for row in coll.find({}):
+        row_ids.append(row['_id'])
+        image_paths.append(row['path'])
+        all_keypoints.append(pickle.loads(row['sift'])[1])
+    stacked_keypoints = np.vstack(all_keypoints)
+
+    # Subject count is used to classify clusters. Image count is for kmeans batchsize
+    print("bucketing into subjects....")
+    path_to_subject_map = get_path_to_subject_map(image_paths)
+    subject_count = len(set(list(path_to_subject_map.values())))
+    image_count = len(image_paths)
+
+    # Build kmeans cluster with all the descriptors
+    k = subject_count * 10
+    batch_size = image_count * 3
+    print("Building {} clusters with batch size {} ....".format(k, batch_size))
+    kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=1).fit(stacked_keypoints)
+
+    # Index each vector to preserve order after multiprocessing -> [(1,v1), (2,v2), (3,v3), .....]
+    ordered_vectors = [(i, all_keypoints[i]) for i in range(len(all_keypoints))]
+
+    # Run with multiprocessing to get single vector from multiple keypoints for all images.
+    # Upsert using index from ordered_vectors
+    print("generating histogram vectors for every image....")
+    pool = mp.Pool(processes=mp.cpu_count())
+    partial_get_histogram_vector = partial(get_histogram_vector, kmeans_cluster, subject_count)
+    upserts = []
+    for res in tqdm(pool.imap_unordered(partial_get_histogram_vector, ordered_vectors), total=len(ordered_vectors)):
+        index = res[0]
+        single_vector = Binary(pickle.dumps(res[1], protocol=2))
+        upserts.append(
+            UpdateOne(
+                filter = {'_id': row_ids[index]},
+                update = {'$set': {'_id': row_ids[index], 'histogram_vector': single_vector}},
+                upsert = True
+            )
+        )
+        if len(upserts) == settings.LOADER.BATCH_SIZE:
+            coll.bulk_write(upserts)
+            upserts.clear()
+
+    if upserts:
+        coll.bulk_write(upserts)
+    print("fin.")
+
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
     for row in coll.find(f):
         all_image_names.append(row['path'])
-        descriptors = pickle.loads(row['sift'])[1]
-        all_vectors.append(descriptors)
-
+        histogram_vectors = pickle.loads(row['histogram_vector'])
+        all_vectors.append(histogram_vectors)
 
     return all_image_names, np.array(all_vectors)

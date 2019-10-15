@@ -213,6 +213,7 @@ def get_histogram_vector(kmeans_cluster, subject_count, ordered_vector):
 
 def generate_histogram_vectors(coll):
     # Fetch ids, image paths and descriptor arrays of all inserted hog vectors
+    print("fetching all keypoints....")
     row_ids, image_paths, all_keypoints = [], [], []
     for row in coll.find({}):
         row_ids.append(row['_id'])
@@ -221,6 +222,7 @@ def generate_histogram_vectors(coll):
     stacked_keypoints = np.vstack(all_keypoints)
 
     # Subject count is used to classify clusters. Image count is for kmeans batchsize
+    print("bucketing into subjects....")
     path_to_subject_map = get_path_to_subject_map(image_paths)
     subject_count = len(set(list(path_to_subject_map.values())))
     image_count = len(image_paths)
@@ -228,13 +230,15 @@ def generate_histogram_vectors(coll):
     # Build kmeans cluster with all the descriptors
     k = subject_count * 10
     batch_size = image_count * 3
-    kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=0).fit(stacked_keypoints)
+    print("Building {} clusters with batch size {} ....".format(k, batch_size))
+    kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=1).fit(stacked_keypoints)
 
     # Index each vector to preserve order after multiprocessing -> [(1,v1), (2,v2), (3,v3), .....]
     ordered_vectors = [(i, all_keypoints[i]) for i in range(len(all_keypoints))]
 
     # Run with multiprocessing to get single vector from multiple keypoints for all images.
     # Upsert using index from ordered_vectors
+    print("generating histogram vectors for every image....")
     pool = mp.Pool(processes=mp.cpu_count())
     partial_get_histogram_vector = partial(get_histogram_vector, kmeans_cluster, subject_count)
     upserts = []
@@ -254,7 +258,7 @@ def generate_histogram_vectors(coll):
 
     if upserts:
         coll.bulk_write(upserts)
-
+    print("fin.")
 
 def get_all_vectors(coll, f={}):
     all_image_names = []

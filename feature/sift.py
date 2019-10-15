@@ -231,7 +231,7 @@ def generate_histogram_vectors(coll):
     k = subject_count * 10
     batch_size = image_count * 3
     print("Building {} clusters with batch size {} ....".format(k, batch_size))
-    kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=1).fit(stacked_keypoints)
+    kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=settings.SIFT.KMEANS_VERBOSITY).fit(stacked_keypoints)
 
     # Index each vector to preserve order after multiprocessing -> [(1,v1), (2,v2), (3,v3), .....]
     ordered_vectors = [(i, all_keypoints[i]) for i in range(len(all_keypoints))]

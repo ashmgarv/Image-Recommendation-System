@@ -22,6 +22,7 @@ metadata_csv = "../Data/HandInfo.csv"
   # David Lowe
     use_opencv = 1
     bin_path = "./bin/sift"
+    kmeans_verbosity = 0
 
   # [default.moment]
   # # The colletion to store moments data

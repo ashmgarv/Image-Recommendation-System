@@ -46,29 +46,31 @@ def filter_images(label):
         list -- list of image paths with given label
     """
     #map on which column to check based on filter values
-    filter_to_column = {
-        'left': 'aspectOfHand',
-        'right': 'aspectOfHand',
-        'dorsal': 'aspectOfHand',
-        'palmar': 'aspectOfHand',
-        'male': 'gender',
-        'female': 'gender',
-        'with_acs': 'accessories',
-        'without_acs': 'accessories'
+    filter_to_column_values = {
+        'left': {'column' :'aspectOfHand', 'values': ['dorsal left', 'palmar left']},
+        'right': {'column': 'aspectOfHand', 'values': ['dorsal right', 'palmar right']},
+        'dorsal': {'column': 'aspectOfHand', 'values': ['dorsal left', 'dorsal right']},
+        'palmar': {'column': 'aspectOfHand', 'values': ['palmar left', 'palmar right']},
+        'male': {'column': 'gender', 'values': ['male']},
+        'female': {'column': 'gender', 'values': ['female']},
+        'with_acs': {'column': 'accessories', 'values': ['with_acs']},
+        'without_acs': {'column': 'accessories', 'values': ['without_acs']},
     }
-    if label not in filter_to_column.keys():
-        raise Exception('invalid filter. valid filters are ' + ', '.join(list(filter_to_column.keys())))
+    if label not in filter_to_column_values.keys():
+        raise Exception('invalid filter. valid filters are ' + ', '.join(list(filter_to_column_values.keys())))
 
-    #get image paths where the filter holds true
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     coll = client.db[settings.IMAGES.METADATA_COLLECTION]
-    column = filter_to_column[label]
-    
+
+    #get column and filter values
+    column = filter_to_column_values[label]['column']
+    values = filter_to_column_values[label]['values']
+
     filter_image_paths = []
-    for row in coll.find({column: {'$regex': label}}, {'path':1}):
+    for row in coll.find({column: {'$in': values}}, {'path':1}):
         filter_image_paths.append(row['path'])
     return filter_image_paths
 

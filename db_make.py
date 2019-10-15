@@ -132,6 +132,10 @@ def build_db(model, data_path, coll_name):
 
     if len(imgs) > 0:
         coll.insert_many(imgs)
+    
+    #if model is sift, generate and insert histogram vector
+    if model == 'sift':
+        sift.generate_histogram_vectors(coll)
 
 
 if __name__ == "__main__":

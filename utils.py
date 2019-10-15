@@ -72,7 +72,6 @@ def filter_images(label):
         filter_image_paths.append(row['path'])
     return filter_image_paths
 
-
 def get_all_vectors(model, f={}):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,

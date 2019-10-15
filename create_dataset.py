@@ -1,5 +1,5 @@
 #TO CREATE A SMALLER DATASET
-# #Cut out a small csv from the HandInfo.csv file manually
+#Cut out a small csv from the HandInfo.csv file manually
 #Provide path to that csv, path to the images folder and path to output folder
 
 import pandas as pd
@@ -23,4 +23,3 @@ if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
     populate_small_dataset(args)
-

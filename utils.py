@@ -2,6 +2,7 @@ import os
 import shutil
 from subprocess import Popen, PIPE, STDOUT
 import pandas as pd
+from sklearn.cluster import KMeans
 from pymongo import MongoClient
 from dynaconf import settings
 from pathlib import Path
@@ -111,5 +112,21 @@ def get_term_weight_pairs(components, file_name):
         feature_weights.sort(key = lambda ele: ele[1], reverse=True)
         term_weight_pairs.append(feature_weights)
     print_term_weight_pairs(term_weight_pairs, file_name)
-    
+
+def get_centroid(matrix):
+    km = KMeans(n_clusters=1).fit(matrix)
+    return km.cluster_centers_.flatten()
+
+def get_negative_label(label):
+    negative_label_map = {
+        'dorsal':'palmar',
+        'palmar':'dorsal',
+        'left':'right',
+        'right':'left',
+        'with_acs':'without_acs',
+        'without_acs':'with_acs',
+        'male':'female',
+        'female':'male'
+    }
+    return negative_label_map[label]
 

@@ -10,7 +10,7 @@ import os
 sys.path.append('../')
 import output
 from feature_reduction.feature_reduction import reducer
-from utils import get_term_weight_pairs, get_all_vectors, filter_images
+from utils import get_all_vectors, filter_images
 
 
 def prepare_parser():

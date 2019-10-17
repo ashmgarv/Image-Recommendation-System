@@ -9,7 +9,7 @@ sys.path.append('../')
 from output import write_to_file
 from metric.distance import distance
 from feature_reduction.feature_reduction import reducer
-from utils import get_term_weight_pairs, get_all_vectors, filter_images
+from utils import get_all_vectors, filter_images
 
 
 def prepare_parser():

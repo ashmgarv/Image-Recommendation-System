@@ -13,7 +13,7 @@ from output import write_to_file
 from metric.distance import distance
 from feature.moment import get_all_vectors
 from feature_reduction.feature_reduction import reducer
-from utils import get_term_weight_pairs, get_all_vectors
+from utils import get_all_vectors
 
 
 def prepare_parser():

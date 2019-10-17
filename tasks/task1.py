@@ -4,7 +4,9 @@ from multiprocessing import Pool
 import argparse
 from dynaconf import settings
 from pprint import pprint
+from pathlib import Path
 import sys
+import csv
 
 sys.path.append('../')
 import output
@@ -31,8 +33,11 @@ if __name__ == '__main__':
     vectors, eigen_values, latent_vs_old = reducer(
         data_matrix, args.k_latent_semantics, args.feature_reduction_technique)
 
-    pprint(get_term_weight_pairs(vectors), indent=4)
-    pprint(get_term_weight_pairs(latent_vs_old), indent=4)
+    file_name = "images_vs_latent_{}_{}.csv".format(args.model, args.feature_reduction_technique)
+    get_term_weight_pairs(vectors, file_name)
+
+    file_name = "latent_vs_features_{}_{}.csv".format(args.model, args.feature_reduction_technique)
+    get_term_weight_pairs(latent_vs_old, file_name)
 
     # Extra Credit
     # image path with a vector in the latent semantic space

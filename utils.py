@@ -4,8 +4,11 @@ from subprocess import Popen, PIPE, STDOUT
 import pandas as pd
 from pymongo import MongoClient
 from dynaconf import settings
+from pathlib import Path
+import csv
 
 from feature import moment, sift, lbp, hog
+from output import print_term_weight_pairs
 
 def dummy(*args, **kwargs):
     raise NotImplementedError
@@ -93,7 +96,7 @@ def get_metadata(f={}):
     return list(client.db[settings.IMAGES.METADATA_COLLECTION].find(f))
 
 
-def get_term_weight_pairs(components):
+def get_term_weight_pairs(components, file_name):
     """returns array of weights of original features for each latent dimension
     
     Arguments:
@@ -107,4 +110,6 @@ def get_term_weight_pairs(components):
         feature_weights = [(index, weights[index]) for index in range(len(weights))]
         feature_weights.sort(key = lambda ele: ele[1], reverse=True)
         term_weight_pairs.append(feature_weights)
-    return term_weight_pairs
+    print_term_weight_pairs(term_weight_pairs, file_name)
+    
+

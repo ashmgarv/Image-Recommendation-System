@@ -76,6 +76,9 @@ def get_lda(vectors, k, **opts):
     if opts:
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
+        if(np.min(scaled_query_vector)) < 0:
+            print('negative found after scaling query vector. setting to 0')
+            scaled_query_vector[scaled_query_vector < 0] = 0
         lda_query_vector = lda.transform(scaled_query_vector)
         return lda_vectors, None, lda.components_, lda_query_vector
     else:
@@ -101,6 +104,9 @@ def get_nmf(vectors, k, **opts):
     if opts:
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
+        if(np.min(scaled_query_vector)) < 0:
+            print('negative found after scaling query vector. setting to 0')
+            scaled_query_vector[scaled_query_vector < 0] = 0
         nmf_query_vector = nmf.transform(scaled_query_vector)
         return nmf_vectors, None, nmf.components_, nmf_query_vector
     else:

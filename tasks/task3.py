@@ -10,7 +10,7 @@ import os
 sys.path.append('../')
 import output
 from feature_reduction.feature_reduction import reducer
-from utils import get_all_vectors, filter_images
+from utils import get_all_vectors, filter_images, get_term_weight_pairs
 
 
 def prepare_parser():
@@ -41,7 +41,11 @@ if __name__ == "__main__":
     vectors, eigen_values, latent_vs_old = reducer(
         data_matrix, args.k_latent_semantics, args.feature_reduction_technique)
 
-    pprint(vectors.tolist(), indent=4)
+    file_name = "images_vs_latent_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.label)
+    get_term_weight_pairs(vectors, file_name)
+
+    file_name = "latent_vs_features_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.label)
+    get_term_weight_pairs(latent_vs_old, file_name)
 
     # Extra Credit
     # image path with a vector in the latent semantic space

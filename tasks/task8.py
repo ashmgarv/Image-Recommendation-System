@@ -20,8 +20,8 @@ mapping = {
     "male": 0,
     "female": 1,
 
-    "fair": 0,
-    "very fair": 1,
+    "very fair": 0,
+    "fair": 1,
     "medium": 2,
     "dark": 3,
 
@@ -61,6 +61,6 @@ if __name__ == "__main__":
     vectors, eigen_values, latent_vs_old = reducer(
         img_meta, args.k_latent_semantics, "nmf")
 
-    pprint(get_term_weight_pairs(vectors), indent=4)
-    pprint(get_term_weight_pairs(latent_vs_old), indent=4)
+    get_term_weight_pairs(vectors, "8_img_{}.csv".format(args.k_latent_semantics))
+    get_term_weight_pairs(latent_vs_old, "8_feat_{}.csv".format(args.k_latent_semantics))
 

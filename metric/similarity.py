@@ -25,7 +25,7 @@ def cosine(vec1, vec2):
 
 def intersection(vec1, vec2):
     if len(vec1.shape) == 2:
-        return np.minimum(vec1, vec2).sum(axis=1) / float(np.maximum(vec1, vec2).sum(axis=1))
+        return np.minimum(vec1, vec2).sum(axis=1) / np.maximum(vec1, vec2).sum(axis=1)
     return np.minimum(vec1, vec2).sum() / float(np.maximum(vec1, vec2).sum())
 
 opt = [

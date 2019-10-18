@@ -57,10 +57,20 @@ metadata_csv = "../Data/HandInfo.csv"
     collection = "img_hog"
     scale_factor = 10
 
-
   [default.images]
     metadata_collection = 'metadata'
 
   [default.lbp]
     collection = 'lbp'
+  
+  [default.task5_config]
+    max_evals = 1000
+    gamma_max = 0
+    lda_max_evals = 5
+    lda_gamma_max = 0
+    nmf_gamma_max = 2000
+    nmf_max_evals = 500
+    clfs_directory = '../Outputs/clfs/'
+
+
 

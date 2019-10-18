@@ -21,6 +21,10 @@ def get_pca(vectors, k, **opts):
 
     #if opts contains query vector, apply scaler and PCA transformation to the query vector and return
     if opts:
+        if 'get_scaler_model' in opts and opts['get_scaler_model']:
+            print("returning just the scaler and frt model")
+            return pca_vectors, pca.explained_variance_, pca.components_, std_scaler, pca
+
         query_vector = opts['query_vector']
         scaled_query_vector = std_scaler.transform(query_vector)
         pca_query_vector = pca.transform(scaled_query_vector)
@@ -48,6 +52,10 @@ def get_svd(vectors, k, **opts):
 
     #if opts contains query vector, apply scaler and SVD transformation to the query vector and return
     if opts:
+        if 'get_scaler_model' in opts and opts['get_scaler_model']:
+            print("returning just the scaler and frt model")
+            return svd_vectors, svd.explained_variance_, svd.components_, std_scaler, svd
+
         query_vector = opts['query_vector']
         scaled_query_vector = std_scaler.transform(query_vector)
         svd_query_vector = svd.transform(scaled_query_vector)
@@ -69,11 +77,15 @@ def get_lda(vectors, k, **opts):
     min_max_scaler = MinMaxScaler()
     scaled_values = min_max_scaler.fit_transform(vectors)
 
-    lda = LatentDirichletAllocation(n_components=k, verbose=2,random_state=0,learning_method='online',n_jobs=-1)
+    lda = LatentDirichletAllocation(n_components=k, verbose=0,learning_method='online',n_jobs=-1)
     lda_vectors = lda.fit_transform(scaled_values)
 
     #if opts contains query vector, apply scaler and PCA transformation to the query vector and return
     if opts:
+        if 'get_scaler_model' in opts and opts['get_scaler_model']:
+            print("returning just the scaler and frt model")
+            return lda_vectors, None, lda.components_, min_max_scaler, lda
+
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
         if(np.min(scaled_query_vector)) < 0:
@@ -102,6 +114,10 @@ def get_nmf(vectors, k, **opts):
 
     #if opts contains query vector, apply scaler and PCA transformation to the query vector and return
     if opts:
+        if 'get_scaler_model' in opts and opts['get_scaler_model']:
+            print("returning just the scaler and frt model")
+            return nmf_vectors, None, nmf.components_, min_max_scaler, nmf
+
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
         if(np.min(scaled_query_vector)) < 0:

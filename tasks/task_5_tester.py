@@ -4,6 +4,7 @@ from tasks import task5
 import argparse
 from pymongo import MongoClient
 from dynaconf import settings
+from pathlib import Path
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
@@ -16,20 +17,49 @@ def run_task_5(data_path, file_path):
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    #Run 150 times
-    for i in range(150):
-        image_name = get_image_name(random.randrange(2,502))
-        label = get_label(random.randrange(0,7))
-        model = get_model(random.randrange(0,3))
-        reduction_technique = get_reduction_technique(random.randrange(0,3))
 
-        img_path = data_path +  '/'  + image_name
+    data_path = Path(settings.path_for(data_path))
+    paths = list(data_path.iterdir())
+
+    positive_res = 0
+    negative_res = 0
+
+    for path in paths:
+        path = str(path)
+        image_name = path.split('/')[-1]
+        label = get_label(random.randrange(0,7))
+        model = get_model(random.randrange(0,2))
+        reduction_technique = "pca"
+
+        img_path = path
         img = client.db['metadata'].find_one({'path':img_path})
 
         #If the randomly generated image_id does not exist in metadata, then loop again
         if not img:
             continue
-        os.system(f"python {file_path} -m {model} -k '4' -frt {reduction_technique} -l {label} -i {image_name} -d {data_path}")
+
+        original_label = ""
+        if label in ('male', 'female'):
+            original_label = img['gender']
+        elif label in ('palmar', 'dorsal'):
+            original_label = img['aspectOfHand'].split(' ')[0]
+        elif label in ('left', 'right'):
+            original_label = img['aspectOfHand'].split(' ')[1]
+        elif label in ('with_acs', 'without_acs'):
+            original_label = img['accessories']
+
+        print("Given label : " +label)
+        print('Original label of the image is : ' + original_label)
+
+        res = task5.run(model, 2, reduction_technique, label, image_name, data_path)
+
+        if original_label == res:
+            positive_res += 1
+        else:
+            negative_res += 1
+
+    print("We got the accuracy of " + str((positive_res / (positive_res + negative_res)) * 100))
+
 
 def get_label(num):
     states = [
@@ -39,7 +69,7 @@ def get_label(num):
 
 def get_model(num):
     models = [
-        'lbp','sift','moment','hog'
+        'lbp','moment','hog'
     ]
     return models[num]
 

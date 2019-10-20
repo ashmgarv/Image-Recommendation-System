@@ -119,7 +119,7 @@ if __name__ == "__main__":
     #Compute distance of the given image vector from centroid of given label.
     distance_label = distance(centroid_labels, reduced_query_vector, 0)
 
-    #Check if distance_label falls in between the min and max of the distances vector, if yes, given label if the answer.
+    #Check if distance_label is less than or equal to max of the distances vector, if yes, given label if the answer.
     if distance_label <= max(distances_to_centroid):
         print(f"Label of the given image is : {args.label.upper()}")
     else:

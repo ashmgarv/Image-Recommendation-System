@@ -44,17 +44,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     meta = get_metadata()
+    images = []
+    img_meta = []
 
     try:
-        img_meta = np.array([[
-            m["age"],
-            mapping[m["gender"]],
-            mapping[m["skinColor"]],
-            mapping[m["accessories"]],
-            m["nailPolish"],
-            mapping[m["aspectOfHand"].split()[0]],
-            mapping[m["aspectOfHand"].split()[1]],
-            m["irregularities"]] for m in meta])
+        for m in meta:
+            images.append(m['path'])
+            img_meta.append([
+                m["age"],
+                mapping[m["gender"]],
+                mapping[m["skinColor"]],
+                mapping[m["accessories"]],
+                m["nailPolish"],
+                mapping[m["aspectOfHand"].split()[0]],
+                mapping[m["aspectOfHand"].split()[1]],
+                m["irregularities"]])
     except KeyError:
         raise Exception("Invalid metadata detected")
 
@@ -63,4 +67,20 @@ if __name__ == "__main__":
 
     get_term_weight_pairs(vectors, "8_img_{}.csv".format(args.k_latent_semantics))
     get_term_weight_pairs(latent_vs_old, "8_feat_{}.csv".format(args.k_latent_semantics))
+
+    # Extra Credit
+    # image path with a vector in the latent semantic space
+    data_z = zip(images, vectors)
+    # image path for each latenet semantic in h
+    feature_z = [(idx, images[np.argmax(np.dot(img_meta, i))]) for idx, i in enumerate(latent_vs_old)]
+
+    output.write_to_file("visualize_data_z.html",
+                         "data-z-task8-{}.html".format(args.k_latent_semantics),
+                         data_z=data_z,
+                         title="TEST")
+
+    output.write_to_file("visualize_feat_z.html",
+                         "feat-z-task8-{}.html".format(args.k_latent_semantics),
+                         feature_z=feature_z,
+                         title="TEST")
 

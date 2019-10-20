@@ -10,7 +10,7 @@ import os
 sys.path.append('../')
 import output
 from feature_reduction.feature_reduction import reducer
-from utils import get_metadata, get_term_weight_pairs
+from utils import get_metadata, get_term_weight_pairs, get_all_vectors
 from metric import distance, similarity
 
 from sklearn.preprocessing import MinMaxScaler
@@ -43,48 +43,56 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     meta = get_metadata()
+    # Mapping between image file path name and the metadata
+    meta = {m['path']: m for m in meta}
+    images, data_matrix = get_all_vectors("moment_inv")
 
-    try:
-        subjects = { m['id']: {
-            "vec": [
-                m['age'],
-                mapping[m['gender']],
-                mapping[m['skinColor']]
-            ],
-            "img": m["path"]
-        } for m in meta }
-    except KeyError:
-        raise Exception("Invalid metadata detected")
+    data_matrix = np.c_[data_matrix, np.array([[meta[i]['age'], mapping[meta[i]['gender']], mapping[meta[i]['skinColor']]] for i in images]) * [2,2,10]]
 
-    sub_img = []
-    subs = []
-    sub_ids = []
-    for idx, s in enumerate(subjects):
-        subs.append(subjects[s]["vec"])
-        sub_img.append(subjects[s]["img"])
-        sub_ids.append(s)
-    subs = np.array(subs, dtype=float)
+    # Image-Image similarity
+    img_img = np.array([
+        distance.similarity(data_matrix, img, distance.EUCLIDEAN) for img in data_matrix
+    ])
 
-    # Scale the ages to better fit with the other binary values
-    m = MinMaxScaler()
-    subs[:,0] = m.fit_transform(subs[:,0].reshape(-1,1)).reshape(1,-1)
+    # sub id to list of their image index in images
+    subs = {}
+    # sub id to metadata if the subjects
+    sub_meta = {}
+    for img in meta:
+        idx = images.index(img)
+        if meta[img]['id'] not in subs:
+            subs[meta[img]['id']] = []
+        subs[meta[img]['id']].append(idx)
+        sub_meta[meta[img]['id']] = meta[img]
 
-    # sub_sub = np.array([distance.similarity(subs, s, distance.EUCLIDEAN) for s in subs])
-    sub_sub = np.array([similarity.similarity(subs, s, similarity.PEARSONS) for s in subs])
+    # sub id to order in matrix
+    sub_to_idx = {sub: idx for idx, sub in enumerate(subs)}
+    # index to sub id
+    idx_to_sub = [0] * len(sub_to_idx)
+    for sub in sub_to_idx:
+        idx_to_sub[sub_to_idx[sub]] = sub
+    # A subject subject similarity index
+    sub_sub = np.zeros((len(subs), len(subs),))
 
-    vectors, eigen_values, latent_vs_old = reducer(
-        sub_sub, args.k_latent_semantics, "nmf")
+    for sub1 in sub_to_idx:
+        for sub2 in sub_to_idx:
+            sub_sub[sub_to_idx[sub1], sub_to_idx[sub2]] = img_img[subs[sub1],:].take(subs[sub2], axis=1).mean()
 
-    get_term_weight_pairs(vectors, "sub_weight_{}.csv".format(args.k_latent_semantics))
+    w, _, h = reducer(sub_sub, args.k_latent_semantics, "nmf")
 
-    resp = [
-        sorted([(sub_ids[idx], sub_img[idx], sim) for idx, sim in enumerate(sims)], key=lambda el: el[2], reverse=True)
-    for sims in sub_sub]
+    # Print term weigth pairs
+    get_term_weight_pairs(w, "sub_weight_{}.csv".format(args.k_latent_semantics))
+    sub_weight = [
+        sorted([("z{}".format(idx), weight,) for idx, weight in enumerate(row)], key=lambda x: x[1])
+        for row in w
+    ]
 
-    output.write_to_file("visualize_sub_sub.html",
-                         "sub-sub-{}.html".format(args.k_latent_semantics),
-                         sub_img=sub_img,
-                         sub_ids=sub_ids,
-                         resp=resp,
+    output.write_to_file("visualize_task7.html",
+                         "sub-task7-{}.html".format(args.k_latent_semantics),
+                         vectors=sub_weight,
+                         subs=subs,
+                         idx_to_sub=idx_to_sub,
+                         images=images,
+                         sub_meta=sub_meta,
                          title="TEST")
 

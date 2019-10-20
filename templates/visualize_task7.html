@@ -1,0 +1,52 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{{ title }}</title>
+	<style type="text/css">
+	.tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;margin-bottom:50px;}
+	.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
+	.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#f0f0f0;}
+	.tg .tg-buh4{background-color:#f9f9f9;text-align:left;vertical-align:top}
+	.tg .tg-0lax{text-align:left;vertical-align:top}
+	.thumb{width:200px}
+	</style>
+</head>
+
+<body>
+  <section id="main">
+
+{% for row in vectors %}
+	<table class="tg gap">
+	<tr>
+{% for item in row %}
+		<td class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">
+			{{ item[0] }}
+		</td>
+{% endfor %}
+		<td class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">
+			<p>{{ sub_meta[idx_to_sub[loop.index - 1]]['id'] }}, {{ sub_meta[idx_to_sub[loop.index - 1]]['age'] }}, {{ sub_meta[idx_to_sub[loop.index - 1]]['gender'] }}, {{ sub_meta[idx_to_sub[loop.index - 1]]['skinColor'] }}</p>
+		</td>
+	</tr>
+
+	<tr>
+{% for item in row %}
+		<td class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">
+			{{ item[1] }}
+		</td>
+{% endfor %}
+
+{% for img in subs[idx_to_sub[loop.index - 1]] %}
+		<td class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">
+			<img class="thumb" src="{{ images[img] }}"/>
+		</td>
+{% endfor %}
+	</tr>
+
+	</table>
+{% endfor %}
+
+  </section>
+</body>
+</html>

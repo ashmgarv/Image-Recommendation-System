@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if os.sep not in args.image_name:
         query_path = data_path / args.image_name
     else:
-        query_path = data_path
+        query_path = Path(args.image_name)
     
     # Get the best fit classifier
     clf = get_ideal_clf(args.model, args.label, args.k_latent_semantics, args.feature_reduction_technique)

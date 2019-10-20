@@ -35,7 +35,8 @@ if __name__ == "__main__":
     if os.sep not in args.image_name:
         query_path = data_path / args.image_name
     else:
-        query_path = data_path
+        query_path = Path(args.image_name)
+        args.image_name = query_path.name
 
     query_path, query_vector = get_all_vectors(args.model, f={
         'path': {

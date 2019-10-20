@@ -61,7 +61,9 @@ def build_metadata_db(path):
     metadata_path = Path(settings.path_for(settings.METADATA_CSV))
     image_metadata = pd.read_csv(str(metadata_path.resolve()))
     image_metadata['accessories'] = image_metadata['accessories'].replace( {0: 'without_acs',1: 'with_acs'})
-    image_metadata['path'] = str(path.resolve()) + os.sep + image_metadata['imageName'].astype(str)
+    # image_metadata['path'] = str(path.resolve()) + os.sep + image_metadata['imageName'].astype(str)
+    image_metadata['path'] = image_metadata['imageName'].map(lambda x: str(path.resolve() / x) if (path / x).is_file() else None)
+    image_metadata = image_metadata.dropna()
     del image_metadata['imageName']
 
     #clear collection and insert

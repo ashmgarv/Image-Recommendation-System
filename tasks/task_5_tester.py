@@ -28,8 +28,8 @@ def run_task_5(data_path, file_path):
         path = str(path)
         image_name = path.split('/')[-1]
         label = get_label(random.randrange(0,7))
-        model = get_model(random.randrange(0,2))
-        reduction_technique = "pca"
+        model = get_model(random.randrange(0,3))
+        reduction_technique = get_reduction_technique(random.randrange(0,3))
 
         img_path = path
         img = client.db['metadata'].find_one({'path':img_path})
@@ -51,7 +51,7 @@ def run_task_5(data_path, file_path):
         print("Given label : " +label)
         print('Original label of the image is : ' + original_label)
 
-        res = task5.run(model, 2, reduction_technique, label, image_name, data_path)
+        res = task5.run(model, 30, reduction_technique, label, image_name, data_path)
 
         if original_label == res:
             positive_res += 1
@@ -69,7 +69,7 @@ def get_label(num):
 
 def get_model(num):
     models = [
-        'lbp','moment','hog'
+        'lbp','sift','moment','hog'
     ]
     return models[num]
 

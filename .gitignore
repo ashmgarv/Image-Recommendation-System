@@ -7,3 +7,8 @@ venv/*
 *.pyc
 notebooks
 settings.local.toml
+*.swp
+*_LOCAL*
+*_BACKUP*
+*_BASE*
+*_REMOTE*

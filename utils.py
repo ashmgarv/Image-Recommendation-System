@@ -129,4 +129,3 @@ def get_negative_label(label):
         'female':'male'
     }
     return negative_label_map[label]
-

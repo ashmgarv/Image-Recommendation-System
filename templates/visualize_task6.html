@@ -1,0 +1,36 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{{ title }}</title>
+	<style type="text/css">
+	.tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;margin-bottom:50px;}
+	.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
+	.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#f0f0f0;}
+	.tg .tg-buh4{background-color:#f9f9f9;text-align:left;vertical-align:top}
+	.tg .tg-0lax{text-align:left;vertical-align:top}
+	.thumb{width:200px}
+	</style>
+</head>
+
+<body>
+  <section id="main">
+
+	<table class="tg gap">
+{% for sub in data %}
+	<tr>
+		<td>
+			<p>{{ sub[0]['id'] }}, {{ sub[0]['age'] }}, {{ sub[0]['gender'] }}, {{ sub[0]['skinColor'] }}, {{ sub[1] }}</p>
+		</td>
+{% for img in sub[2] %}
+		<td>
+			<img class="thumb" src="{{ img }}"/>
+		</td>
+{% endfor %}
+	</tr>
+{% endfor %}
+	</table>
+  </section>
+</body>
+</html>

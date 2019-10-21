@@ -1,7 +1,9 @@
 import numpy as np
+import math
 
 EUCLIDEAN = 0
 MANHATTAN = 1
+EUCLIDEAN_UNEQUAL = 2
 
 """
 All these distance functions here calculates the distance. Duh.
@@ -24,10 +26,13 @@ def manhattan(vec1, vec2):
         return np.sum(vec1 - vec2, axis=1)
     return np.sum(vec1 - vec2)
 
+def euclidean_unequal(vec1, vec2):
+    return np.linalg.norm(vec1-vec2)
 
 opt = [
     euclidean,
     manhattan,
+    euclidean_unequal
 ]
 
 

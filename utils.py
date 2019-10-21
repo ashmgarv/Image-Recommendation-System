@@ -96,6 +96,54 @@ def get_metadata(f={}):
                          password=settings.PASSWORD)
     return list(client.db[settings.IMAGES.METADATA_COLLECTION].find(f))
 
+"""
+    Function:  To build a dictionary with subject-ID as key and
+                data matrix(feature vectors per image) as value.
+    Arguments: List of Subject-IDs.
+    Returns:   Dictionary.
+"""
+def get_subject_image_vectors(model):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    subjects_id_list = list(client.db[settings.IMAGES.METADATA_COLLECTION].distinct("id"))
+    subject_data = {}
+    images_per_subject = {}
+    k_list = []
+    for sub in subjects_id_list:
+        image_paths = list(client.db[settings.IMAGES.METADATA_COLLECTION].find({"id":sub},{"_id":0,"path":1}))
+        images = []
+        k_list.append(len(image_paths))
+        for x in range(len(image_paths)):
+            images.append(image_paths[x]['path'])
+            images_per_subject[sub] = images
+        _, subject_image_vectors = get_all_vectors(model, f={
+            'path': {
+                '$in': images
+            }
+        })
+        subject_data[sub] = subject_image_vectors
+    return subject_data,  min(k_list), images_per_subject
+
+"""
+    Returns subject attributes for a given subject-ID.
+"""
+def get_subject_attributes(subject_id):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    return list(client.db[settings.IMAGES.METADATA_COLLECTION].find({"id":subject_id},{"_id":0, "id" : 1,
+        "age" : 1,
+        "gender" : 1,
+        "skinColor" : 1,
+        #"accessories" : 1,
+        #"nailPolish" : 1,
+        #"aspectOfHand" : 1,
+        #"path" : 1,
+        #"irregularities" : 1
+        }))
 
 def get_term_weight_pairs(components, file_name):
     """returns array of weights of original features for each latent dimension

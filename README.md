@@ -132,7 +132,7 @@ This task comprises of 4*4 variations, each of the feature extraction models can
 3. Male or Female
 4. With Accessories or Without Accessories
 
-
+```
     $python task5.py
     
     -m
@@ -145,6 +145,7 @@ This task comprises of 4*4 variations, each of the feature extraction models can
        Image label.     [‘male’,‘female’,‘left’,‘right’,‘with_acs’,‘without_acs’,‘dorsal’,‘palmar’]
     -i
        Query image name.
+```
 
 ## Task 6
 In this task, we are given a subject ID and the program needs to identify the 3 closest subjects in the given dataset.

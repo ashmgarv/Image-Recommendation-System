@@ -19,59 +19,6 @@ def prepare_parser():
     parser.add_argument('-d', '--data_path', type=str)
     return parser
 
-def run(model, k_latent_semantics, feature_reduction_technique, label, image_name, data_path):
-    # get the absolute data path
-    data_path = Path(settings.path_for(settings.DATA_PATH) if data_path is None else data_path)
-
-    # get query image name and vector
-    if os.sep not in image_name:
-        query_path = data_path / image_name
-    else:
-        query_path = data_path
-
-    query_path, query_vector = get_all_vectors(model, f={
-        'path': {
-            '$eq': str(query_path.resolve())
-        }
-    })
-
-    # Use filter_images to filter all vectors query and run dim reduction on them.
-    # Also pass query vector to apply the same scale and dim reduction transformation
-    label_images = filter_images(label)
-    label_images, label_vectors = get_all_vectors(model, f={
-        'path': {
-            '$in': label_images
-        }
-    })
-
-    # Run dimensionality reduction across label vectors and pass the query vector to apply the same to it as well.
-    reduced_dim_vectors, _, _, reduced_query_vector = reducer(
-        label_vectors,
-        k_latent_semantics,
-        feature_reduction_technique,
-        query_vector=query_vector[0].reshape(1, -1)
-    )
-
-    # Compute centroid for the given label.
-    centroid_labels = get_centroid(reduced_dim_vectors)
-
-    distances_to_centroid = []
-    # calculate distance to every image from the centroid .
-    for data_point in reduced_dim_vectors:
-        distances_to_centroid.append(distance(data_point, centroid_labels, 0))
-
-    # Compute distance of the given image vector from centroid of given label.
-    distance_label = distance(centroid_labels, reduced_query_vector, 0)
-
-    # Check if distance_label falls in between the min and max of the distances vector, if yes, given label if the answer.
-    if distance_label <= max(distances_to_centroid):
-        print(f"Label of the given image is : {label.upper()}")
-        return label
-    else:
-        print(f"Label of the given image is : {get_negative_label(label).upper()}")
-        return get_negative_label(label)
-
-
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
@@ -117,7 +64,7 @@ if __name__ == "__main__":
         distances_to_centroid.append(distance(data_point, centroid_labels, 0))
 
     #Compute distance of the given image vector from centroid of given label.
-    distance_label = distance(centroid_labels, reduced_query_vector, 0)
+    distance_label = distance(reduced_query_vector[0], centroid_labels, 0)
 
     #Check if distance_label is less than or equal to max of the distances vector, if yes, given label if the answer.
     if distance_label <= max(distances_to_centroid):

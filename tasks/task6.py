@@ -70,6 +70,6 @@ if __name__ == "__main__":
         print("{} -> {}".format(per_sub_data_visual[key][1], per_sub_data_visual[key][0]))
 
     output.write_to_file("visualize_task6.html",
-                         "sub-task6-{}.html".format(args.subject_id),
+                         "task6-{}.html".format(args.subject_id),
                          data=per_sub_data_visual.values(),
                          title="TEST")

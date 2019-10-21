@@ -65,8 +65,8 @@ if __name__ == "__main__":
     vectors, eigen_values, latent_vs_old = reducer(
         img_meta, args.k_latent_semantics, "nmf")
 
-    get_term_weight_pairs(vectors, "8_img_{}.csv".format(args.k_latent_semantics))
-    get_term_weight_pairs(latent_vs_old, "8_feat_{}.csv".format(args.k_latent_semantics))
+    get_term_weight_pairs(vectors, "task8_{}.csv".format(args.k_latent_semantics))
+    get_term_weight_pairs(latent_vs_old, "task8_{}.csv".format(args.k_latent_semantics))
 
     # Extra Credit
     # image path with a vector in the latent semantic space
@@ -75,12 +75,12 @@ if __name__ == "__main__":
     feature_z = [(idx, images[np.argmax(np.dot(img_meta, i))]) for idx, i in enumerate(latent_vs_old)]
 
     output.write_to_file("visualize_data_z.html",
-                         "data-z-task8-{}.html".format(args.k_latent_semantics),
+                         "task8-data-z-{}.html".format(args.k_latent_semantics),
                          data_z=data_z,
                          title="TEST")
 
     output.write_to_file("visualize_feat_z.html",
-                         "feat-z-task8-{}.html".format(args.k_latent_semantics),
+                         "task8-feat-z-{}.html".format(args.k_latent_semantics),
                          feature_z=feature_z,
                          title="TEST")
 

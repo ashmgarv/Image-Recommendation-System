@@ -81,14 +81,14 @@ if __name__ == "__main__":
     w, _, h = reducer(sub_sub, args.k_latent_semantics, "nmf")
 
     # Print term weigth pairs
-    get_term_weight_pairs(w, "sub_weight_{}.csv".format(args.k_latent_semantics))
+    get_term_weight_pairs(w, "task7_{}.csv".format(args.k_latent_semantics))
     sub_weight = [
         sorted([("z{}".format(idx), weight,) for idx, weight in enumerate(row)], key=lambda x: x[1])
         for row in w
     ]
 
     output.write_to_file("visualize_task7.html",
-                         "sub-task7-{}.html".format(args.k_latent_semantics),
+                         "task7-{}.html".format(args.k_latent_semantics),
                          vectors=sub_weight,
                          subs=subs,
                          idx_to_sub=idx_to_sub,

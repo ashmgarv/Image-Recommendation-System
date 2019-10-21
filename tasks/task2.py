@@ -62,7 +62,7 @@ if __name__ == "__main__":
     ranks = [(all_images[i], distances[i]) for i in range(len(distances))]
     ranks.sort(key = lambda t: t[1])
     write_to_file("op_temp.html",
-        "{}-{}-{}.html".format(args.image_name, args.model, args.feature_reduction_technique),
+        "task2-{}-{}-{}-{}-{}.html".format(args.image_name, args.model, args.feature_reduction_technique, args.k_latent_semantics, args.related_images),
         ranks=ranks[:args.related_images],
         key=query_path[0],
         title="TEST")

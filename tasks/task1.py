@@ -33,10 +33,10 @@ if __name__ == '__main__':
     vectors, eigen_values, latent_vs_old = reducer(
         data_matrix, args.k_latent_semantics, args.feature_reduction_technique)
 
-    file_name = "images_vs_latent_{}_{}.csv".format(args.model, args.feature_reduction_technique)
+    file_name = "task1_images_vs_latent_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.k_latent_semantics)
     get_term_weight_pairs(vectors, file_name)
 
-    file_name = "latent_vs_features_{}_{}.csv".format(args.model, args.feature_reduction_technique)
+    file_name = "task1_latent_vs_features_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.k_latent_semantics)
     get_term_weight_pairs(latent_vs_old, file_name)
 
     # Extra Credit
@@ -46,12 +46,12 @@ if __name__ == '__main__':
     feature_z = [(idx, images[np.argmax(np.dot(data_matrix, i))]) for idx, i in enumerate(latent_vs_old)]
 
     output.write_to_file("visualize_data_z.html",
-                         "data-z-{}-{}.html".format(args.model, args.feature_reduction_technique),
+                         "task1-data-z-{}-{}-{}.html".format(args.model, args.feature_reduction_technique, args.k_latent_semantics),
                          data_z=data_z,
                          title="TEST")
 
     output.write_to_file("visualize_feat_z.html",
-                         "feat-z-{}-{}.html".format(args.model, args.feature_reduction_technique),
+                         "task1-feat-z-{}-{}-{}.html".format(args.model, args.feature_reduction_technique, args.k_latent_semantics),
                          feature_z=feature_z,
                          title="TEST")
 

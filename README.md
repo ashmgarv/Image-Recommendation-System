@@ -133,18 +133,18 @@ This task comprises of 4*4 variations, each of the feature extraction models can
 4. With Accessories or Without Accessories
 
 ```
-    $python task5.py
-    
-    -m
-       Feature model to use.[‘sift’,‘moment’,‘moment_inv’,‘lbp’,‘hog’]
-    -k
-       Number of latent semantics to use.
-    -frt
-       Feature reduction technique to use. [‘pca’,svd’,nmf’,lda’]
-    -l
-       Image label.     [‘male’,‘female’,‘left’,‘right’,‘with_acs’,‘without_acs’,‘dorsal’,‘palmar’]
-    -i
-       Query image name.
+$python task5.py
+
+-m
+   Feature model to use.[‘sift’,‘moment’,‘moment_inv’,‘lbp’,‘hog’]
+-k
+   Number of latent semantics to use.
+-frt
+   Feature reduction technique to use. [‘pca’,svd’,nmf’,lda’]
+-l
+   Image label.     [‘male’,‘female’,‘left’,‘right’,‘with_acs’,‘without_acs’,‘dorsal’,‘palmar’]
+-i
+   Query image name.
 ```
 
 ## Task 6

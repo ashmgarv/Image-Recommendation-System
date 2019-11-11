@@ -201,7 +201,7 @@ def get_histogram_vector(kmeans_cluster, subject_count, ordered_vector):
     index = ordered_vector[0]
     all_keypoints = ordered_vector[1]
 
-    histogram_vector = np.zeros(subject_count * 10)
+    histogram_vector = np.zeros(subject_count) 
     kp_count = all_keypoints.shape[0]
 
     for key_point in all_keypoints:
@@ -228,7 +228,7 @@ def generate_histogram_vectors(coll):
     image_count = len(image_paths)
 
     # Build kmeans cluster with all the descriptors
-    k = subject_count * 10
+    k = subject_count
     batch_size = image_count * 3
     print("Building {} clusters with batch size {} ....".format(k, batch_size))
     kmeans_cluster = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, verbose=settings.SIFT.KMEANS_VERBOSITY).fit(stacked_keypoints)

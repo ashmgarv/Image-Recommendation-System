@@ -5,7 +5,6 @@ venv/*
 .vscode
 *.DS_Store*
 *.pyc
-notebooks
 settings.local.toml
 *.swp
 *_LOCAL*

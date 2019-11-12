@@ -16,6 +16,7 @@ def get_pca(vectors, k, **opts):
     std_scaler = StandardScaler()
     scaled_values = std_scaler.fit_transform(vectors)
 
+    k = min(vectors.shape[1], k)
     pca = PCA(n_components=k)
     pca_vectors = pca.fit_transform(scaled_values)
 
@@ -46,8 +47,8 @@ def get_svd(vectors, k, **opts):
     std_scaler = StandardScaler()
     scaled_values = std_scaler.fit_transform(vectors)
 
+    k = min(vectors.shape[1], k)
     svd = TruncatedSVD(n_components=k)
-
     svd_vectors = svd.fit_transform(scaled_values)
 
     #if opts contains query vector, apply scaler and SVD transformation to the query vector and return
@@ -77,6 +78,7 @@ def get_lda(vectors, k, **opts):
     min_max_scaler = MinMaxScaler()
     scaled_values = min_max_scaler.fit_transform(vectors)
 
+    k = min(vectors.shape[1], k)
     lda = LatentDirichletAllocation(n_components=k, verbose=0,learning_method='online',n_jobs=-1)
     lda_vectors = lda.fit_transform(scaled_values)
 

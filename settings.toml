@@ -5,8 +5,11 @@ password = ""
 port = 27017
 host = "localhost"
 database = "db"
+query_database = "query_db"
 # Path to the dataset
-data_path = "../Data/Dataset2/"
+data_path = "../Data/skimmed/"
+# Path to unlabled dataset
+unlabeled_data_path = "../Data/Dataset2/"
 # Path to the output
 output_path = "../Outputs/"
 # Path to templates

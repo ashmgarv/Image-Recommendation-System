@@ -39,7 +39,7 @@ vectors_getters = {
 }
 
 
-def filter_images(label):
+def filter_images(label, unlabelled_db=False):
     """filters images based on label
     
     Arguments:
@@ -67,7 +67,8 @@ def filter_images(label):
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+    database = settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE
+    coll = client[database][settings.IMAGES.METADATA_COLLECTION]
 
     #get column and filter values
     column = filter_to_column_values[label]['column']
@@ -78,13 +79,14 @@ def filter_images(label):
         filter_image_paths.append(row['path'])
     return filter_image_paths
 
-def get_all_vectors(model, f={}):
+def get_all_vectors(model, f={},unlabelled_db=False):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     inst = vectors_getters[model]
-    coll = client.db[inst["coll"]]
+    database = settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE
+    coll = client[database][inst["coll"]]
 
     return inst["func"](coll, f)
 

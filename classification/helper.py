@@ -7,6 +7,7 @@ from pymongo import MongoClient
 def cv_split(dataset, n_batches):
     splits = list()
     copy = list(dataset)
+    print (dataset.shape)
     batch_size = int(len(dataset) / n_batches)
     for i in range(n_batches):
         batch = list()

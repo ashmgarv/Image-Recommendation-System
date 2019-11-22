@@ -1,8 +1,10 @@
 #The implementation is referred from https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
-from random import seed
-from utils import get_all_vectors
-import classification.helper as helper
 
+from random import seed
+import helper 
+import sys 
+sys.path.append('../')
+from utils import get_all_vectors
 
 #Calculate gini index for the given split
 #gini_index = 1 - sum(split_proportion for each class / num_instances)
@@ -119,10 +121,11 @@ def decision_tree(train_data, test_data, maximum_depth, minimum_size):
     return(predictions)
 
 def evaluate(dataset):
-    n_folds = 5
-    max_depth = 20
-    min_size = 50
+    n_folds = 12
+    max_depth = 30
+    min_size = 10
     scores = helper.evaluate_algorithm(dataset, decision_tree, n_folds, max_depth, min_size)
+    print ('n_folds = ',n_folds,'\nmax_depth = ', max_depth,'\nmin_size = ',min_size)
     print('Scores: %s' % scores)
     print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
 
@@ -138,6 +141,9 @@ def evaluate(dataset):
 seed(1)
 from feature_reduction.feature_reduction import reducer
 images, data_matrix = get_all_vectors('moment')
-vectors, eigen_values, latent_vs_old = reducer(data_matrix, 3, "pca")
+nmf = 30
+print(data_matrix.shape)
+vectors, eigen_values, latent_vs_old = reducer(data_matrix, nmf, "nmf")
+print('nmf = ', nmf)
 dm = helper.build_labelled_matrix(vectors, images, 'aspectOfHand')
 evaluate(dm)

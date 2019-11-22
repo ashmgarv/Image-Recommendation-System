@@ -1,5 +1,4 @@
 #The implementation is referred from https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
-
 from random import seed
 import helper 
 import sys 
@@ -138,7 +137,6 @@ def evaluate(dataset):
 #     else:
 #         print('%s[%s]' % ((depth*' ', node)))
 
-seed(1)
 from feature_reduction.feature_reduction import reducer
 images, data_matrix = get_all_vectors('moment')
 nmf = 30

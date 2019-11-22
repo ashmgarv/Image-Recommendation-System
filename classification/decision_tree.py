@@ -2,8 +2,10 @@
 from random import seed
 import helper 
 import sys 
+
 sys.path.append('../')
 from utils import get_all_vectors
+from feature_reduction.feature_reduction import reducer
 
 #Calculate gini index for the given split
 #gini_index = 1 - sum(split_proportion for each class / num_instances)
@@ -137,11 +139,11 @@ def evaluate(dataset):
 #     else:
 #         print('%s[%s]' % ((depth*' ', node)))
 
-from feature_reduction.feature_reduction import reducer
-images, data_matrix = get_all_vectors('moment')
-nmf = 30
-print(data_matrix.shape)
-vectors, eigen_values, latent_vs_old = reducer(data_matrix, nmf, "nmf")
-print('nmf = ', nmf)
-dm = helper.build_labelled_matrix(vectors, images, 'aspectOfHand')
-evaluate(dm)
+if __name__ == "__main__":
+    images, data_matrix = get_all_vectors('moment')
+    nmf = 30
+    print(data_matrix.shape)
+    vectors, eigen_values, latent_vs_old = reducer(data_matrix, nmf, "nmf")
+    print('nmf = ', nmf)
+    dm = helper.build_labelled_matrix(vectors, images, 'aspectOfHand')
+    evaluate(dm)

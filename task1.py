@@ -16,6 +16,7 @@ from metric.distance import distance
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
 
+"""
 def get_initial_centroid(points, k):
     centroids = points.copy()
     np.random.shuffle(centroids)
@@ -49,7 +50,7 @@ def get_final_centroids(points, c):
             centroids = new_centroids.copy()
     
     return new_centroids, closest
-
+"""
 def generate_vec():
     #getting dorsal vectors and class
     dorsal_paths = filter_images('dorsal')
@@ -88,6 +89,7 @@ def mahalano(x, data):
     mahal = mahalanobis(x,np.mean(data, axis=0),inv_covmat)
     return mahal
 
+"""
 def test(dorsal_vectors, dorsal_class, palmar_vectors, palmar_class):
     # Vectors for palmar and dorsal split into test and train
     vectors =  np.vstack((palmar_vectors, dorsal_vectors))
@@ -114,13 +116,14 @@ def test(dorsal_vectors, dorsal_class, palmar_vectors, palmar_class):
         pred_labels.append(p_label)
     
     return accuracy_score(pred_labels, test_labels)
+"""
 
 model_list = ['sift','hog','moment']
 #model_list = ['hog']
 k_list = [10,15,20,25,30,35,40]
 results = []
 
-#test across model, k, c:
+#test across model, k,
 for model_each in model_list:
         for k_each in k_list:
             

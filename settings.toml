@@ -7,9 +7,9 @@ host = "localhost"
 database = "db"
 query_database = "query_db"
 # Path to the dataset
-data_path = "../Data/skimmed/"
+data_path = "../Data/Labelled/"
 # Path to unlabled dataset
-unlabeled_data_path = "../Data/Dataset2/"
+unlabeled_data_path = "../Data/Unlabelled/"
 # Path to the output
 output_path = "../Outputs/"
 # Path to templates
@@ -66,6 +66,16 @@ metadata_csv = "../Data/HandInfo.csv"
   [default.lbp]
     collection = 'lbp'
   
+  [default.task1_config]
+    model = 'sift'
+    frt = 'pca'
+  
+  [default.task2_config]
+    models = ['hog']
+    frt = 'nmf'
+    k = 5
+    max_iter = 1000
+
   [default.task5_config]
     max_evals = 1000
     gamma_max = 0

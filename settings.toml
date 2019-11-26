@@ -69,6 +69,8 @@ metadata_csv = "../Data/HandInfo.csv"
   [default.task1_config]
     model = 'sift'
     frt = 'pca'
+  
+  [default.task2_config]
     models = ['hog']
     frt = 'nmf'
     k = 5

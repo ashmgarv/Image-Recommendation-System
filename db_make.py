@@ -72,7 +72,6 @@ model_to_fun = {
 
 def build_metadata_db(path, db_name):
     """function that read metadata file and populated mongoDB
-
     Arguments:
         path {pathlib.Path} -- path of datafolder to append to filenames (easier to filter)
     """
@@ -105,7 +104,6 @@ def build_metadata_db(path, db_name):
 def build_db(model, data_path, db_name):
     """
     Extracts features from all the images given in the dataset and stores it in the Database
-
     Args:
         model: The model to use. This dictates the features to be extracted from the images.
         data_path: Path to build model from.

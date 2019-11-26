@@ -34,10 +34,12 @@ def turn_into_100c100(arr, nrows, ncols):
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
-    for row in coll.find(f):
+    for row in coll.aggregate([{'$match': f}, {'$sort': {'path': 1}}], allowDiskUse=True):
         all_image_names.append(row['path'])
         lbp_vals = pickle.loads(row['lbp'])
         all_vectors.append(lbp_vals)
 
     return all_image_names, np.array(all_vectors)
+
+
 

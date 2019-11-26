@@ -66,6 +66,16 @@ metadata_csv = "../Data/HandInfo.csv"
   [default.lbp]
     collection = 'lbp'
   
+  [default.task1_config]
+    model = 'sift'
+    frt = 'pca'
+  
+  [default.task2_config]
+    models = ['hog']
+    frt = 'nmf'
+    k = 5
+    max_iter = 1000
+
   [default.task5_config]
     max_evals = 1000
     gamma_max = 0

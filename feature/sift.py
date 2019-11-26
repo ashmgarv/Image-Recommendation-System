@@ -113,7 +113,7 @@ def get_subject_count():
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    coll = client.db[settings.IMAGES.METADATA_COLLECTION]
+    coll = client[settings.DATABASE][settings.IMAGES.METADATA_COLLECTION]
     return len(coll.distinct('id'))
 
 
@@ -133,7 +133,7 @@ def generate_histogram_vectors(coll):
     image_count = len(image_paths)
 
     # Build kmeans cluster with all the descriptors
-    subject_count = get_subject_count() * 5
+    subject_count = get_subject_count()
     batch_size = image_count * 3
     print("Building {} clusters with batch size {} ....".format(subject_count, batch_size))
     kmeans_cluster = MiniBatchKMeans(
@@ -172,7 +172,7 @@ def generate_histogram_vectors(coll):
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
-    for row in coll.find(f):
+    for row in coll.find(f).sort([('path',1)]):
         all_image_names.append(row['path'])
         histogram_vectors = pickle.loads(row['histogram_vector'])
         all_vectors.append(histogram_vectors)

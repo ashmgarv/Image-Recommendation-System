@@ -25,7 +25,7 @@ def process_img(img_path):
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
-    for row in coll.find(f):
+    for row in coll.find(f).sort([('path',1)]):
         all_image_names.append(row['path'])
         hog = pickle.loads(row['hog']).flatten()
         all_vectors.append(hog)

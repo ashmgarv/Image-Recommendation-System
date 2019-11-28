@@ -1,0 +1,54 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <style>
+#main, html, body {
+  height: 100%;
+  margin: 0;
+}
+#main {
+  display: flex;
+}
+#keys {
+  height: 100%;
+  width: 50%;
+}
+#rank {
+  height: 100%;
+  overflow: hidden;
+  width: 50%;
+}
+img {
+  width: 350px;
+}
+#rank > div {
+  height: inherit;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+  </style>
+</head>
+
+<body>
+  <section, id="main">
+  <div id="keys">
+{% for key in keys %}
+    <div class="user_images">
+      <img src="{{ key }}" />
+    </div>
+{% endfor %}
+  </div>
+  <div id="rank"><div>
+{% for item in ranks %}
+    <div class="item">
+      <p>{{ item[1] }}, {{ item[0] }}</p>
+      <img src="{{ item[0] }}" />
+    </div>
+{% endfor %}
+    </div></div>
+  </section>
+</body>
+</html>

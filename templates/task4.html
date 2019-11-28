@@ -1,0 +1,30 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{{ title }}</title>
+	<style type="text/css">
+	.tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
+	.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
+	.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#f0f0f0;}
+	.tg .tg-buh4{background-color:#f9f9f9;text-align:left;vertical-align:top}
+	.tg .tg-0lax{text-align:left;vertical-align:top}
+	.thumb{width:200px}
+	</style>
+</head>
+
+<body>
+	<section id="main">
+		<table class="tg">
+{% for item in predictions %}
+			<tr>
+				<th class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}"><img class="thumb" src="{{ item[0] }}"/></th>
+				<th class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">{{ item[0] }}</th>
+				<th class="{{ loop.cycle('tg-0lax', 'tg-buh4') }}">{{ item[1] }}</th>
+			</tr>
+{% endfor %}
+		</table>
+	</section>
+</body>
+</html>

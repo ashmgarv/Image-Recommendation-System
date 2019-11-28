@@ -1,6 +1,6 @@
 #The implementation is referred from https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
 from random import seed
-import helper 
+from .helper import evaluate_algorithm, build_labelled_matrix
 import sys 
 
 sys.path.append('../')
@@ -125,7 +125,7 @@ def evaluate(dataset):
     n_folds = 12
     max_depth = 30
     min_size = 10
-    scores = helper.evaluate_algorithm(dataset, decision_tree, n_folds, max_depth, min_size)
+    scores = evaluate_algorithm(dataset, decision_tree, n_folds, max_depth, min_size)
     print ('n_folds = ',n_folds,'\nmax_depth = ', max_depth,'\nmin_size = ',min_size)
     print('Scores: %s' % scores)
     print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
@@ -145,5 +145,5 @@ if __name__ == "__main__":
     print(data_matrix.shape)
     vectors, eigen_values, latent_vs_old = reducer(data_matrix, nmf, "nmf")
     print('nmf = ', nmf)
-    dm = helper.build_labelled_matrix(vectors, images, 'aspectOfHand')
+    dm = build_labelled_matrix(vectors, images, 'aspectOfHand')
     evaluate(dm)

@@ -76,8 +76,7 @@ def get_metadata_space(images, unlabelled=False):
     space = np.array([[
         meta[i]['age'], mapping[meta[i]['gender']],
         mapping[meta[i]['skinColor']], mapping[meta[i]["accessories"]],
-        meta[i]["nailPolish"], mapping[meta[i]["aspectOfHand"].split()[0]],
-        mapping[meta[i]["aspectOfHand"].split()[1]], meta[i]["irregularities"]
+        meta[i]["nailPolish"], meta[i]["irregularities"]
     ] for i in images])
 
     return meta, space

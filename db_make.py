@@ -154,9 +154,9 @@ if __name__ == "__main__":
     database = settings.QUERY_DATABASE \
         if args.build_unlabeled else settings.DATABASE
 
-    metadata_path = Path(settings.path_for(settings.METADATA_CSV))
-    #metadata_path = Path(settings.path_for(settings.UNLABELED_METADATA_CSV \
-    #                                       if args.build_unlabeled else settings.METADATA_CSV))
+    #metadata_path = Path(settings.path_for(settings.METADATA_CSV))
+    metadata_path = Path(settings.path_for(settings.UNLABELED_METADATA_CSV \
+                                           if args.build_unlabeled else settings.METADATA_CSV))
 
     if (not data_path.exists() or not data_path.is_dir()):
         raise Exception("Invalid path provided.")

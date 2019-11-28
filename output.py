@@ -22,7 +22,7 @@ def write_to_file(tmp, file_name, **kwargs):
 
     f = open(op_path, "w")
     f.write(tmpl.render(**kwargs))
-    print("Fin. Check Outputs folder")
+    print("Fin. Check {} in Outputs folder".format(file_name))
 
 def print_term_weight_pairs(term_weight_pairs, file_name):
     file_name = Path(settings.path_for(settings.OUTPUT_PATH)) / file_name

@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+	<meta charset="utf-8">
+	<title>{{ title }}</title>
+	<style>
+		* {box-sizing: border-box;}
+		.thumb {width: 150px; height: 150px; border-style: outset;}
+		.col {float: left;width: 50%;padding: 10px;border: solid;}
+		.row:after {content: "";display: table;clear: both;}
+		.container {overflow-x: scroll;overflow-y: hidden;white-space: nowrap;}
+	</style>
+  	<body>
+	
+		<div class="row">
+			<!-- DORSAL CLUSTERS -->
+			<div class="col" style="background-color:#e4e4e4;">
+				<h1>Dorsal clusters</h1>
+				{% for cluster in dorsal_clusters %}
+				<div>
+					<div class="container">
+						{% for path in cluster %}
+							<img src="{{ path }}" class="thumb">
+						{% endfor %}
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+			
+			<!-- PALMAR CLUSTERS -->
+			<div class="col" style="background-color:#cecbcb;">
+				<h1>Palmar clusters</h1>
+				{% for cluster in palmar_clusters %}
+				<div>
+					<div class="container">
+						{% for path in cluster %}
+							<img src="{{ path }}" class="thumb">
+						{% endfor %}
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+
+	</body>
+</html>

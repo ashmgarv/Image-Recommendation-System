@@ -86,10 +86,8 @@ unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
     frt = 'pca'
   
   [default.task2_config]
-    models = ['hog']
-    frt = 'nmf'
-    k = 5
-    max_iter = 1000
+    model = 'moment'
+    max_iter = 500
 
   [default.task5_config]
     max_evals = 1000

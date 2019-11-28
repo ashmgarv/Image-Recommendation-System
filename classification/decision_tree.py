@@ -130,15 +130,6 @@ def evaluate(dataset):
     print('Scores: %s' % scores)
     print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
 
-# Print a decision tree
-# def print_decision_tree(node, depth=0):
-#     if isinstance(node, dict):
-#         print('%s[X%d < %.3f]' % ((depth*' ', (node['index']+1), node['value'])))
-#         print_decision_tree(node['left'], depth+1)
-#         print_decision_tree(node['right'], depth+1)
-#     else:
-#         print('%s[%s]' % ((depth*' ', node)))
-
 if __name__ == "__main__":
     images, data_matrix = get_all_vectors('moment')
     nmf = 30

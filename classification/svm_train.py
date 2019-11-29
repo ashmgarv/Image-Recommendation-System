@@ -1,5 +1,5 @@
 import numpy as np 
-
+# Formulation of gradient descent algorithm referred from https://towardsdatascience.com/support-vector-machine-introduction-to-machine-learning-algorithms-934a444fca47 
 class SVM:
     def __init__(self):
        self.w = None
@@ -10,6 +10,7 @@ class SVM:
         learn_rate = 0.001
         # regularization parameter to act as a trade off between misclassification and size 
         # of the margin, higher the value more weightage is given to misclassifcation.
+        # Referred from https://datascience.stackexchange.com/questions/4943/intuition-for-the-regularization-parameter-in-svm
         reg_param = 0.1
         # number of epochs across the training data set.
         iter = 1000

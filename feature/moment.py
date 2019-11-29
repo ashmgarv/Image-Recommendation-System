@@ -121,7 +121,7 @@ def process_img(img_path, win_h, win_w, invert=False):
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
-    for row in coll.find(f).sort([('path',1)]):
+    for row in coll.aggregate([{'$match': f}, {'$sort': {'path': 1}}], allowDiskUse=True):
         all_image_names.append(row['path'])
         moments = pickle.loads(row['moments']).flatten()
         all_vectors.append(moments)

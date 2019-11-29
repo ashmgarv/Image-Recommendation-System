@@ -6,7 +6,6 @@ import multiprocessing as mp
 
 import sys
 sys.path.append('../')
-from utils import get_all_vectors, filter_images, get_test_training_data
 from feature_reduction.feature_reduction import reducer
 
 class Kmeans():
@@ -26,11 +25,14 @@ class Kmeans():
         return centroids[:c]
 
 
-    def get_closest(self, points, centroids):
+    def get_closest(self, points, centroids, return_min=False):
         c_extended = centroids[:, np.newaxis]
         distances = np.sqrt(((points - c_extended)**2).sum(axis=2))
-        closest_centroids = np.argmin(distances, axis = 0)
-        return closest_centroids
+        if not return_min:
+            closest_centroids = np.argmin(distances, axis = 0)
+            return closest_centroids
+        else:
+            return np.min(distances)
 
 
     def get_mean_centroids(self, points, centroids, closest):
@@ -76,14 +78,6 @@ class Kmeans():
         self.centroids = cluster_scores[-1][0]
         self.closest = cluster_scores[-1][1]
     
-    
-    def get_silhoutte_score(self, test_vector):
-        test_closest = self.get_closest(test_vector, self.centroids)
-        score = silhouette_samples(
-                np.vstack((self.points, test_vector)),
-                np.concatenate((self.closest, test_closest))
-            )[-1]
-        return score
 
 
 

@@ -10,10 +10,10 @@ import pandas as pd
 
 sys.path.append('../')
 from output import write_to_file
-from feature.moment import get_all_vectors
 from feature_reduction.feature_reduction import reducer
 from utils import get_all_vectors, filter_images
 from classification.kmeans import Kmeans
+from sklearn.metrics import accuracy_score
 
 
 def prepare_parser():
@@ -21,41 +21,27 @@ def prepare_parser():
     parser.add_argument('-c', '--n_clusters', type=int, required=True)
     return parser
 
+def predict_label(query, dorsal_kmeans, palmar_kmeans):
+    dorsal_dist = dorsal_kmeans.get_closest(query, dorsal_kmeans.centroids, return_min=True)
+    palmar_dist = palmar_kmeans.get_closest(query, palmar_kmeans.centroids, return_min=True)
+    return 'dorsal' if dorsal_dist <= palmar_dist else 'palmar'
 
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
-    
     n_clusters = args.n_clusters
 
     #get the absolute data path and models whose features to concatenate
     data_path = Path(settings.path_for(settings.DATA_PATH))
-    models = settings.TASK2_CONFIG.MODELS
+    model = settings.TASK2_CONFIG.MODEL
 
     #Fetch training data for dorsal and palmer images from LABELLED DB
     dorsal_paths = filter_images('dorsal')
-    dorsal_vectors, palmar_vectors = np.array([]), np.array([])
-    for model in models:
-        dorsal_paths, temp = get_all_vectors(model, f={'path': {'$in': dorsal_paths}})
-        if not dorsal_vectors.size: dorsal_vectors = temp
-        else: dorsal_vectors = np.concatenate((dorsal_vectors, temp), axis=1)
-
-        palmar_paths, temp = get_all_vectors(model, f={'path': {'$nin': dorsal_paths}})
-        if not palmar_vectors.size: palmar_vectors = temp
-        else: palmar_vectors = np.concatenate((palmar_vectors, temp), axis=1)
+    dorsal_paths, dorsal_vectors = get_all_vectors(model, f={'path': {'$in': dorsal_paths}})
+    palmar_paths, palmar_vectors = get_all_vectors(model, f={'path': {'$nin': dorsal_paths}})
     
-    #Fetch test data for dorsal and palmer images from LABELLED DB
-    test_data = np.array([])
-    for model in models:
-        test_data_paths, temp = get_all_vectors(model, unlabelled_db=True)
-        if not test_data.size: test_data = temp
-        else: test_data = np.concatenate((test_data, temp), axis=1)
-    
-    #apply frt on dorsal and palmar vectors and project test data onto dorsal and palmar reduced feature spaces
-    frt = settings.TASK2_CONFIG.FRT
-    k = settings.TASK2_CONFIG.K
-    dorsal_vectors, _, _, q_dorsal_vectors = reducer(dorsal_vectors, k, frt, query_vector=test_data)
-    palmar_vectors, _, _, q_palmar_vectors = reducer(palmar_vectors, k, frt, query_vector=test_data)
+    #Fetch test data from UNLABELLED DB
+    test_data_paths, test_data = get_all_vectors(model, unlabelled_db=True)
 
     #Get centroids and centroid_labels for dorsal and palmar vectors
     print("Clustering dorsal vectors")
@@ -65,17 +51,22 @@ if __name__ == "__main__":
     palmar_kmeans = Kmeans(palmar_vectors, n_clusters)
     palmar_kmeans.cluster()
 
-    #predict with score comparison
-    predicted_labels = []
-    for i in range(len(test_data)):
-        dorsal_score = dorsal_kmeans.get_silhoutte_score(q_dorsal_vectors[i])
-        palmar_score = palmar_kmeans.get_silhoutte_score(q_palmar_vectors[i])
-        if dorsal_score > palmar_score: predicted_labels.append(1) 
-        else: predicted_labels.append(0)
-
-    images = [path.split('/')[-1] for path in test_data_paths]
-    labels = ['dorsal' if each == 1 else 'palmar' for each in predicted_labels]
-    df = pd.DataFrame()
-    df['images'] = images
-    df['labels'] = labels
-    print(df)
+    #compare distance to dorsal and palmar centroid to label
+    vec_func = np.vectorize(predict_label)
+    labels = [predict_label(each, dorsal_kmeans, palmar_kmeans) for each in test_data]
+    write_to_file("task4.html",
+                    "task2-{}.html".format(n_clusters),
+                    predictions=zip(test_data_paths, labels),
+                    title="TEST")
+    
+    #write cluster image paths to HTML
+    temp = pd.DataFrame(list(zip(dorsal_paths, dorsal_kmeans.closest)), columns = ['path', 'cluster'])
+    dorsal_clusters = list(temp.groupby(['cluster'])['path'].apply(lambda x: x.values.tolist()))
+    temp = pd.DataFrame(list(zip(palmar_paths, palmar_kmeans.closest)), columns = ['path', 'cluster'])
+    palmar_clusters = list(temp.groupby(['cluster'])['path'].apply(lambda x: x.values.tolist()))
+    write_to_file("clusters.html",
+                    "cluster.html",
+                    dorsal_clusters = dorsal_clusters,
+                    palmar_clusters = palmar_clusters,
+                    title = 'clusterbois'
+    )

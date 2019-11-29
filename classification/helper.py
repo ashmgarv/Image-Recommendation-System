@@ -3,6 +3,11 @@ import numpy as np
 from dynaconf import settings
 from pymongo import MongoClient
 
+import sys
+sys.path.append('../')
+import utils
+
+
 #Split a dataset into k small batches
 def cv_split(dataset, n_batches):
     splits = list()
@@ -59,12 +64,52 @@ def get_accuracy(ground_truth, predicted):
             right_prediction += 1
     return right_prediction / float(len(ground_truth)) * 100.0
 
+
+def prepare_matrix_for_evaluation(data_matrix):
+    data_matrix = np.array(data_matrix, dtype=object)
+    data_matrix = np.c_[data_matrix, [None] * len(data_matrix)]
+    return data_matrix
+
+
+def get_labelled_data(feature):
+    # Get labelled images
+    l_images, feature_space = utils.get_all_vectors(feature)
+
+    # Get metadata
+    meta = utils.get_metadata()
+    meta = {m['path']: m for m in meta}
+
+    return l_images, meta, feature_space
+
+
+def get_unlabelled_data(feature):
+    u_images, u_vectors = utils.get_all_vectors(feature)
+
+    # Get metadata
+    meta = utils.get_metadata()
+    meta = {m['path']: m for m in meta}
+
+    return u_images, meta, u_vectors
+
+
+def build_matrix_with_labels(data_matrix, images, metadata):
+    data = np.zeros(len(data_matrix))
+    for idx, image in enumerate(images):
+        if 'palmar' in metadata[image]['aspectOfHand']:
+            data[idx] = 1.0
+        else:
+            data[idx] = 0.0
+
+    data_matrix = np.c_[data_matrix, data]
+    return data_matrix
+
+
 def build_labelled_matrix(data_matrix, images, metadata_type):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    db = client['db']
+    db = client[settings.DATABASE]
     coll = db[settings.IMAGES.METADATA_COLLECTION]
     data = []
     for image in images:

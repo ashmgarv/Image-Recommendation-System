@@ -17,7 +17,10 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     # If not provided, we rebuild the metadata instead
     parser.add_argument('-m', '--model', type=str, default=None)
-    parser.add_argument('-u', '--build_unlabeled', default=False, action='store_true')
+    parser.add_argument('-u',
+                        '--build_unlabeled',
+                        default=False,
+                        action='store_true')
     return parser
 
 
@@ -70,13 +73,12 @@ model_to_fun = {
 }
 
 
-def build_metadata_db(path, db_name):
+def build_metadata_db(path, db_name, metadata_path):
     """function that read metadata file and populated mongoDB
     Arguments:
         path {pathlib.Path} -- path of datafolder to append to filenames (easier to filter)
     """
     #rebuilding accessories column and adding path column
-    metadata_path = Path(settings.path_for(settings.METADATA_CSV))
     image_metadata = pd.read_csv(str(metadata_path.resolve()))
     image_metadata['accessories'] = image_metadata['accessories'].replace({
         0:
@@ -84,10 +86,9 @@ def build_metadata_db(path, db_name):
         1:
         'with_acs'
     })
-    # image_metadata['path'] = str(path.resolve()) + os.sep + image_metadata['imageName'].astype(str)
     image_metadata['path'] = image_metadata['imageName'].map(
         lambda x: str(path.resolve() / x) if (path / x).is_file() else None)
-    image_metadata = image_metadata.dropna()
+    image_metadata = image_metadata.dropna(subset=['path'])
     del image_metadata['imageName']
 
     #clear collection and insert
@@ -148,17 +149,21 @@ if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
 
-    data_path = Path(
-        settings.UNLABELED_DATA_PATH) if args.build_unlabeled else Path(
-            settings.DATA_PATH)
-    database = settings.QUERY_DATABASE if args.build_unlabeled else settings.DATABASE
+    data_path = Path(settings.path_for(settings.UNLABELED_DATA_PATH)) \
+        if args.build_unlabeled else Path(settings.path_for(settings.DATA_PATH))
+    database = settings.QUERY_DATABASE \
+        if args.build_unlabeled else settings.DATABASE
+
+    #metadata_path = Path(settings.path_for(settings.METADATA_CSV))
+    metadata_path = Path(settings.path_for(settings.UNLABELED_METADATA_CSV \
+                                           if args.build_unlabeled else settings.METADATA_CSV))
 
     if (not data_path.exists() or not data_path.is_dir()):
         raise Exception("Invalid path provided.")
 
     if not args.model:
         print("inserting metadata for {} into {}".format(data_path, database))
-        build_metadata_db(data_path, database)
+        build_metadata_db(data_path, database, metadata_path)
     else:
         print("Building database for model {} from {}".format(
             args.model, str(data_path)))

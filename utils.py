@@ -91,12 +91,15 @@ def get_all_vectors(model, f={},unlabelled_db=False):
     return inst["func"](coll, f)
 
 
-def get_metadata(f={}):
+def get_metadata(f={}, unlabelled_db=False):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    return list(client.db[settings.IMAGES.METADATA_COLLECTION].find(f))
+    return list(
+        client[settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE]
+        [settings.IMAGES.METADATA_COLLECTION].find(f))
+
 
 """
     Function:  To build a dictionary with subject-ID as key and
@@ -179,5 +182,3 @@ def get_negative_label(label):
         'female':'male'
     }
     return negative_label_map[label]
-
-

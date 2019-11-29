@@ -185,13 +185,15 @@ def decision_tree_driver(args, evaluate=False):
     # Fetch unlabelled data (as provided in the settings)
     u_images, u_meta, unlabelled = helper.get_unlabelled_data('moment')
 
-    matrix, _, _ = reducer(np.vstack((
+    matrix, _, _,um = reducer(
         data_matrix,
-        unlabelled,
-    )), 30, "nmf")
+        30,
+        "pca",
+        query_vector=unlabelled
+    )
 
     l_matrix = matrix[:len(images)]
-    u_matrix = matrix[len(images):]
+    u_matrix = um[:len(u_images)]
 
     dm = helper.build_labelled_matrix(l_matrix, images, 'aspectOfHand')
 
@@ -212,7 +214,6 @@ def decision_tree_driver(args, evaluate=False):
             if u_meta[image]['aspectOfHand'].split(' ')[0] == 'dorsal' else
             palmar_symbol for image in u_images
         ]
-
         print(helper.get_accuracy(truth, prediction))
 
     return zip(u_images, prediction)

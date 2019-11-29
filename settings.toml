@@ -7,9 +7,9 @@ host = "localhost"
 database = "db"
 query_database = "query_db"
 # Path to the dataset
-data_path = "../Data/Labelled/"
+data_path = "../Data/Labelled/Set1"
 # Path to unlabled dataset
-unlabeled_data_path = "../Data/Unlabelled/"
+unlabeled_data_path = "../Data/Unlabelled/Set 1"
 # Path to the output
 output_path = "../Outputs/"
 # Path to templates

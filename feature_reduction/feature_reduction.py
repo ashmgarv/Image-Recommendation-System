@@ -29,9 +29,9 @@ def get_pca(vectors, k, **opts):
         query_vector = opts['query_vector']
         scaled_query_vector = std_scaler.transform(query_vector)
         pca_query_vector = pca.transform(scaled_query_vector)
-        return pca_vectors, pca.explained_variance_, pca.components_, pca_query_vector
+        return pca_vectors, pca.explained_variance_, pca.components_, pca_query_vector, pca.explained_variance_ratio_
     else:
-        return pca_vectors, pca.explained_variance_, pca.components_
+        return pca_vectors, pca.explained_variance_, pca.components_,pca.explained_variance_ratio_
 
 
 def get_svd(vectors, k, **opts):
@@ -46,7 +46,7 @@ def get_svd(vectors, k, **opts):
     """
     std_scaler = StandardScaler()
     scaled_values = std_scaler.fit_transform(vectors)
-
+    Nan = 'Nan'
     k = min(k, vectors.shape[0], vectors.shape[1])
     svd = TruncatedSVD(n_components=k)
     svd_vectors = svd.fit_transform(scaled_values)
@@ -55,14 +55,14 @@ def get_svd(vectors, k, **opts):
     if opts:
         if 'get_scaler_model' in opts and opts['get_scaler_model']:
             print("returning just the scaler and frt model")
-            return svd_vectors, svd.explained_variance_, svd.components_, std_scaler, svd
+            return svd_vectors, svd.explained_variance_, svd.components_, std_scaler, svd, Nan
 
         query_vector = opts['query_vector']
         scaled_query_vector = std_scaler.transform(query_vector)
         svd_query_vector = svd.transform(scaled_query_vector)
-        return svd_vectors, svd.explained_variance_, svd.components_, svd_query_vector
+        return svd_vectors, svd.explained_variance_, svd.components_, svd_query_vector, Nan
     else:
-        return svd_vectors, svd.explained_variance_, svd.components_
+        return svd_vectors, svd.explained_variance_, svd.components_, Nan
 
 
 def get_lda(vectors, k, **opts):
@@ -81,12 +81,12 @@ def get_lda(vectors, k, **opts):
     k = min(k, vectors.shape[0], vectors.shape[1])
     lda = LatentDirichletAllocation(n_components=k, verbose=0,learning_method='online',n_jobs=-1)
     lda_vectors = lda.fit_transform(scaled_values)
-
+    Nan = 'Nan'
     #if opts contains query vector, apply scaler and PCA transformation to the query vector and return
     if opts:
         if 'get_scaler_model' in opts and opts['get_scaler_model']:
             print("returning just the scaler and frt model")
-            return lda_vectors, None, lda.components_, min_max_scaler, lda
+            return lda_vectors, None, lda.components_, min_max_scaler, lda, Nan
 
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
@@ -94,9 +94,9 @@ def get_lda(vectors, k, **opts):
             print('negative found after scaling query vector. setting to 0')
             scaled_query_vector[scaled_query_vector < 0] = 0
         lda_query_vector = lda.transform(scaled_query_vector)
-        return lda_vectors, None, lda.components_, lda_query_vector
+        return lda_vectors, None, lda.components_, lda_query_vector, Nan
     else:
-        return lda_vectors, None, lda.components_
+        return lda_vectors, None, lda.components_, Nan
 
 def get_nmf(vectors, k, **opts):
     """scales and applies NMF to vectors and opts['query_vector'] if present
@@ -114,12 +114,12 @@ def get_nmf(vectors, k, **opts):
     k = min(k, vectors.shape[0], vectors.shape[1])
     nmf = NMF(n_components=k, init='random', random_state=0)
     nmf_vectors = nmf.fit_transform(scaled_values)
-
+    Nan = 'Nan'
     #if opts contains query vector, apply scaler and PCA transformation to the query vector and return
     if opts:
         if 'get_scaler_model' in opts and opts['get_scaler_model']:
             print("returning just the scaler and frt model")
-            return nmf_vectors, None, nmf.components_, min_max_scaler, nmf
+            return nmf_vectors, None, nmf.components_, min_max_scaler, nmf, Nan
 
         query_vector = opts['query_vector']
         scaled_query_vector = min_max_scaler.transform(query_vector)
@@ -127,9 +127,9 @@ def get_nmf(vectors, k, **opts):
             print('negative found after scaling query vector. setting to 0')
             scaled_query_vector[scaled_query_vector < 0] = 0
         nmf_query_vector = nmf.transform(scaled_query_vector)
-        return nmf_vectors, None, nmf.components_, nmf_query_vector
+        return nmf_vectors, None, nmf.components_, nmf_query_vector, Nan
     else:
-        return nmf_vectors, None, nmf.components_
+        return nmf_vectors, None, nmf.components_, Nan
 
 reducer_type = {
     "lda": get_lda,

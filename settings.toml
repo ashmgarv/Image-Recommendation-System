@@ -22,13 +22,10 @@ template_path = "templates"
  metadata_csv = "../Data/HandInfo.csv"
 # Path to unlabeled metadata
 unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
-<<<<<<< HEAD
-#path appending for phase 3 task 5
-data_complete_path = "C:\\Users\\Yash\\Desktop\\Data\\"
-=======
 # Path to 11k metadata csv
 master_metadata_csv = "../Data/HandInfo.csv"
->>>>>>> a30499b19b71551f9ddd03050347e0b56859b6fe
+
+
 
   [default.ppr]
     [default.ppr.classifier]

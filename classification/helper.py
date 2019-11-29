@@ -83,10 +83,10 @@ def get_labelled_data(feature):
 
 
 def get_unlabelled_data(feature):
-    u_images, u_vectors = utils.get_all_vectors(feature)
+    u_images, u_vectors = utils.get_all_vectors(feature, unlabelled_db=True)
 
     # Get metadata
-    meta = utils.get_metadata()
+    meta = utils.get_metadata(unlabelled_db=True)
     meta = {m['path']: m for m in meta}
 
     return u_images, meta, u_vectors

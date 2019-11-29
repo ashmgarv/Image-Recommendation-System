@@ -4,12 +4,15 @@ username = ""
 password = ""
 port = 27017
 host = "localhost"
+master_database = "master"
 database = "db"
 query_database = "query_db"
 # Path to the dataset
 data_path = "../Data/"
 # Path to unlabled dataset
 unlabeled_data_path = "../Data/phase3_sample_data/Unlabelled/Set 2"
+# Path to all 11k hands (Task 5 and 6)
+master_data_path = "../Data/Hands/"
 # Path to the output
 output_path = "../Outputs/"
 # Path to templates
@@ -19,8 +22,13 @@ template_path = "templates"
  metadata_csv = "../Data/HandInfo.csv"
 # Path to unlabeled metadata
 unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
+<<<<<<< HEAD
 #path appending for phase 3 task 5
 data_complete_path = "C:\\Users\\Yash\\Desktop\\Data\\"
+=======
+# Path to 11k metadata csv
+master_metadata_csv = "../Data/HandInfo.csv"
+>>>>>>> a30499b19b71551f9ddd03050347e0b56859b6fe
 
   [default.ppr]
     [default.ppr.classifier]

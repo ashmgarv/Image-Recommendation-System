@@ -21,6 +21,10 @@ def prepare_parser():
                         '--build_unlabeled',
                         default=False,
                         action='store_true')
+    parser.add_argument('-master',
+                        '--build_master',
+                        default=False,
+                        action='store_true')
     return parser
 
 
@@ -89,7 +93,6 @@ def build_metadata_db(path, db_name, metadata_path):
     image_metadata['path'] = image_metadata['imageName'].map(
         lambda x: str(path.resolve() / x) if (path / x).is_file() else None)
     image_metadata = image_metadata.dropna(subset=['path'])
-    del image_metadata['imageName']
 
     #clear collection and insert
     client = MongoClient(host=settings.HOST,
@@ -149,14 +152,22 @@ if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()
 
-    data_path = Path(settings.path_for(settings.UNLABELED_DATA_PATH)) \
-        if args.build_unlabeled else Path(settings.path_for(settings.DATA_PATH))
-    database = settings.QUERY_DATABASE \
-        if args.build_unlabeled else settings.DATABASE
+    #edge case
+    if args.build_unlabeled and args.build_master: raise Exception("oi you cheeky wanker.")
 
-    #metadata_path = Path(settings.path_for(settings.METADATA_CSV))
-    metadata_path = Path(settings.path_for(settings.UNLABELED_METADATA_CSV \
-                                           if args.build_unlabeled else settings.METADATA_CSV))
+    # Setting images folder
+    data_path = Path(settings.path_for(settings.DATA_PATH))
+    if args.build_unlabeled: data_path = Path(settings.path_for(settings.UNLABELED_DATA_PATH))
+    elif args.build_master: data_path = Path(settings.path_for(settings.MASTER_DATA_PATH))
+    
+    # Setting database
+    database = settings.QUERY_DATABASE if args.build_unlabeled else (settings.MASTER_DATABASE if args.build_master else settings.DATABASE) 
+    
+    # Setting metadata CSV
+    metadata_path = Path(settings.path_for(settings.METADATA_CSV))
+    if args.build_unlabeled: metadata_path = Path(settings.UNLABELED_METADATA_CSV)
+    elif args.build_master: metadata_path = Path(settings.MASTER_METADATA_CSV)
+
 
     if (not data_path.exists() or not data_path.is_dir()):
         raise Exception("Invalid path provided.")

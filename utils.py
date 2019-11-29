@@ -39,7 +39,7 @@ vectors_getters = {
 }
 
 
-def filter_images(label, unlabelled_db=False):
+def filter_images(label, unlabelled_db=False, master_db=False):
     """filters images based on label
     
     Arguments:
@@ -67,37 +67,50 @@ def filter_images(label, unlabelled_db=False):
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
-    database = settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE
+
+    database = settings.QUERY_DATABASE if unlabelled_db else (settings.MASTER_DATABASE if master_db else settings.DATABASE)
     coll = client[database][settings.IMAGES.METADATA_COLLECTION]
 
     #get column and filter values
     column = filter_to_column_values[label]['column']
     values = filter_to_column_values[label]['values']
 
+    #unlabelled metadata csv does not contain label. fetch labels from master db
+    if unlabelled_db:
+        all_unlabelled = [row['imageName'] for row in coll.find({}, {'imageName': 1})]
+
+        coll = client[settings.MASTER_DATABASE][settings.IMAGES.METADATA_COLLECTION]
+        filtered_names = [row['imageName'] for row in coll.find({column: {'$in': values}, 'imageName': {'$in': all_unlabelled}})]
+        if not filtered_names: raise Exception("master metadata not populated. Run python db_make.py -master")
+
+        coll = client[settings.QUERY_DATABASE][settings.IMAGES.METADATA_COLLECTION]
+        filtered_image_paths = [row['path'] for row in coll.find({'imageName': {'$in': filtered_names}})]
+        return filtered_image_paths
+
     filter_image_paths = []
     for row in coll.find({column: {'$in': values}}, {'path':1}):
         filter_image_paths.append(row['path'])
     return filter_image_paths
 
-def get_all_vectors(model, f={},unlabelled_db=False):
+def get_all_vectors(model, f={},unlabelled_db=False, master_db=False):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     inst = vectors_getters[model]
-    database = settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE
+    database = settings.QUERY_DATABASE if unlabelled_db else (settings.MASTER_DATABASE if master_db else settings.DATABASE)
     coll = client[database][inst["coll"]]
 
     return inst["func"](coll, f)
 
 
-def get_metadata(f={}, unlabelled_db=False):
+def get_metadata(f={}, unlabelled_db=False, master_db=False):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     return list(
-        client[settings.QUERY_DATABASE if unlabelled_db else settings.DATABASE]
+        client[settings.QUERY_DATABASE if unlabelled_db else (settings.MASTER_DATABASE if master_db else settings.DATABASE)]
         [settings.IMAGES.METADATA_COLLECTION].find(f))
 
 
@@ -142,12 +155,7 @@ def get_subject_attributes(subject_id):
     return list(client.db[settings.IMAGES.METADATA_COLLECTION].find({"id":subject_id},{"_id":0, "id" : 1,
         "age" : 1,
         "gender" : 1,
-        "skinColor" : 1,
-        #"accessories" : 1,
-        #"nailPolish" : 1,
-        #"aspectOfHand" : 1,
-        #"path" : 1,
-        #"irregularities" : 1
+        "skinColor" : 1
         }))
 
 def get_term_weight_pairs(components, file_name):

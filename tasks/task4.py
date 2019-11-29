@@ -187,7 +187,7 @@ def decision_tree_driver(args, evaluate=False):
     matrix, _, _ = reducer(np.vstack((
         data_matrix,
         unlabelled,
-    )), 10, "pca")
+    )), 30, "nmf")
 
     l_matrix = matrix[:len(images)]
     u_matrix = matrix[len(images):]

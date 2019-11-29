@@ -201,58 +201,58 @@ def prepare_ppr_graph_from_data(a_matrix, edges):
     return graph
 
 
-metadata = get_metadata() + get_metadata(unlabelled_db=True)
-images = {m['path'].split('/')[-1]: m for m in metadata}
-relevant_images = [
-    'Hand_0007166.jpg', 'Hand_0007168.jpg', 'Hand_0008622.jpg',
-    'Hand_0008628.jpg'
-]
-irrelevant_images = [
-    'Hand_0009376.jpg', 'Hand_0000902.jpg', 'Hand_0011283.jpg',
-    'Hand_0008014.jpg'
-]
+if __name__ == '__main__':
+    metadata = get_metadata() + get_metadata(unlabelled_db=True)
+    images = {m['path'].split('/')[-1]: m for m in metadata}
+    relevant_images = [
+        'Hand_0007166.jpg', 'Hand_0007168.jpg', 'Hand_0008622.jpg',
+        'Hand_0008628.jpg'
+    ]
+    irrelevant_images = [
+        'Hand_0009376.jpg', 'Hand_0000902.jpg', 'Hand_0011283.jpg',
+        'Hand_0008014.jpg'
+    ]
 
-img_to_label = {}
-for img in relevant_images:
-    img_to_label[images[img]['path']] = 'relevant'
-for img in irrelevant_images:
-    img_to_label[images[img]['path']] = 'irrelevant'
-"""
-images, graph = prepare_ppr_with_label_nodes(['relevant', 'irrelevant'],
-                                             img_to_label, 58, 'nmf',
-                                             'moment_inv', 'math_method', 0.15,
-                                             90)
-"""
-images, meta, matrix = prepare_data(58, 'nmf', 'moment_inv')
+    img_to_label = {}
+    for img in relevant_images:
+        img_to_label[images[img]['path']] = 'relevant'
+    for img in irrelevant_images:
+        img_to_label[images[img]['path']] = 'irrelevant'
+    """
+    images, graph = prepare_ppr_with_label_nodes(['relevant', 'irrelevant'],
+                                                 img_to_label, 58, 'nmf',
+                                                 'moment_inv', 'math_method', 0.15,
+                                                 90)
+    """
+    images, meta, matrix = prepare_data(58, 'nmf', 'moment_inv')
 
-graph = prepare_ppr_graph_from_data(matrix, 120)
+    graph = prepare_ppr_graph_from_data(matrix, 120)
 
-seed = np.zeros(len(images), dtype=np.float32)
-for i, image in enumerate(images):
-    label = img_to_label.get(image, None)
-    if label == "relevant":
-        seed[i] = 1.0
-    elif label == "irrelevant":
-        seed[i] = 0.0
-    else:
-        seed[i] = 0.5
+    seed = np.zeros(len(images), dtype=np.float32)
+    for i, image in enumerate(images):
+        label = img_to_label.get(image, None)
+        if label == "relevant":
+            seed[i] = 1.0
+        elif label == "irrelevant":
+            seed[i] = 0.0
+        else:
+            seed[i] = 0.5
 
-seed /= seed.sum()
+    seed /= seed.sum()
 
-import pdb
-pdb.set_trace()
+    import pdb
+    pdb.set_trace()
+    #steady_state, _ = power_iteration(graph, 0.55, seed)
+    inv = math_method(graph, 0.55)
+    steady_state = np.dot(inv, (1 - 0.55) * seed)
+    result = [(images[i], steady_state[i])
+              for i in np.flip(steady_state.argsort()) if images[i] not in
+              [key for key in img_to_label
+               if img_to_label[key] == 'relevant']][:20]
 
-# steady_state, _ = power_iteration(graph, 0.55, seed)
-inv = math_method(graph, 0.55)
-steady_state = np.dot(inv, (1 - 0.55) * seed)
-result = [(images[i], steady_state[i]) for i in np.flip(steady_state.argsort())
-          if images[i] not in
-          [key for key in img_to_label
-           if img_to_label[key] == 'relevant']][:20]
-
-output.write_to_file("task3.html",
-                     "xyz.html",
-                     ranks=result,
-                     keys=list(img_to_label.keys()),
-                     title="TEST")
-#     parser.add_argument('--dir', type=str, choices=('labelled', 'unlabelled', 'all'), default='all')
+    output.write_to_file("task3.html",
+                         "xyz.html",
+                         ranks=result,
+                         keys=list(img_to_label.keys()),
+                         title="TEST")
+    #parser.add_argument('--dir', type=str, choices=('labelled', 'unlabelled', 'all'), default='all')

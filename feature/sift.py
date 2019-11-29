@@ -172,7 +172,7 @@ def generate_histogram_vectors(coll):
 def get_all_vectors(coll, f={}):
     all_image_names = []
     all_vectors = []
-    for row in coll.find(f).sort([('path',1)]):
+    for row in coll.aggregate([{'$match': f}, {'$sort': {'path': 1}}], allowDiskUse=True):
         all_image_names.append(row['path'])
         histogram_vectors = pickle.loads(row['histogram_vector'])
         all_vectors.append(histogram_vectors)

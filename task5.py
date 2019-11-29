@@ -200,14 +200,13 @@ if __name__ == "__main__":
     print ("\nTime Taken: ", (time.time()-start))
 
     print(images)
-    
     #Part b
     
     query = input("\nEnter the query image id:\n")
     t = int(input("Enter t:\n"))
 
     if(len(query) <= 16):
-        query = settings.DATA_COMPLETE_PATH + query
+        query = settings.MASTER_DATA_PATH + query
     #query_index = image_to_index_dict[query]
     print(query)
     index = images.index(query)

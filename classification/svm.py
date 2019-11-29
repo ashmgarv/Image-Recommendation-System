@@ -37,7 +37,7 @@ def build_unlabelled():
     test_labels = np.concatenate((dorsal_class,palmar_class))
     return vectors,test_labels, np.concatenate((dorsal_paths,palmar_paths))
 
-def run_svm():
+def run_svm(evaluate):
     # preparing labelled data for training.
     images, data_matrix = get_all_vectors('lbp')
     vectors, eigen_values, latent_vs_old = reducer(data_matrix, 30, "pca")
@@ -51,5 +51,6 @@ def run_svm():
     svclassifier = SVM()
     svclassifier.fit(np.array(x), np.array(y))
     y_pred = svclassifier.predict(x_test)
-    print(classification_report(y_test,y_pred))
+    if evaluate:
+        print(classification_report(y_test,y_pred))
     return image_paths_ul, y_pred

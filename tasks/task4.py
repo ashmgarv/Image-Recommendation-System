@@ -8,6 +8,7 @@ sys.path.append('../')
 from classification import helper
 from classification.ppr_classifier import ppr_classifier
 from classification.decision_tree import decision_tree
+from classification.svm import run_svm
 from feature_reduction.feature_reduction import reducer
 
 import output
@@ -21,7 +22,7 @@ def prepare_parser():
                         '--classifier',
                         type=str,
                         required=True,
-                        choices=['svd', 'decision', 'ppr'])
+                        choices=['svm', 'decision', 'ppr'])
 
     # Can add classifier related args here, if required
 
@@ -216,10 +217,14 @@ def decision_tree_driver(args, evaluate=False):
 
     return zip(u_images, prediction)
 
+def svm_driver(args, evaluate=False):
+    image_paths, pred = run_svm()
+    return zip(image_paths, pred)
 
 classifiers = {
     'ppr': ppr_driver,
     'decision': decision_tree_driver,
+    'svm': svm_driver
 }
 
 if __name__ == "__main__":

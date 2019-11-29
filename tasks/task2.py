@@ -26,46 +26,6 @@ def predict_label(query, dorsal_kmeans, palmar_kmeans):
     palmar_dist = palmar_kmeans.get_closest(query, palmar_kmeans.centroids, return_min=True)
     return 'dorsal' if dorsal_dist <= palmar_dist else 'palmar'
 
-def generate_vec(n=False):
-    
-    #TRAIN DATA
-    dorsal_paths = filter_images(label)
-    dorsal_vectors, palmar_vectors = np.array([]), np.array([])
-    for model in models:
-
-        paths, temp = get_all_vectors(model, f={'path': {'$in': dorsal_paths}})
-        if not dorsal_vectors.size: dorsal_vectors = temp
-        else: dorsal_vectors = np.concatenate((dorsal_vectors, temp), axis=1)
-
-        _, temp = get_all_vectors(model, f={'path': {'$nin': dorsal_paths}})
-        if not palmar_vectors.size: palmar_vectors = temp
-        else: palmar_vectors = np.concatenate((palmar_vectors, temp), axis=1)
-    
-    if n : dorsal_vectors, palmar_vectors = normalize(dorsal_vectors), normalize(palmar_vectors)
-    
-    #TEST DATA
-    q_dorsal_paths = filter_images(label, unlabelled_db=True)
-    q_dorsal_vectors, q_palmar_vectors = np.array([]), np.array([])
-    for model in models:
-
-        _, temp = get_all_vectors(model, f={'path': {'$in': q_dorsal_paths}}, unlabelled_db=True)
-        if not q_dorsal_vectors.size: q_dorsal_vectors = temp
-        else: q_dorsal_vectors = np.concatenate((q_dorsal_vectors, temp), axis=1)
-
-        _, temp = get_all_vectors(model, f={'path': {'$nin': q_dorsal_paths}}, unlabelled_db=True)
-        if not q_palmar_vectors.size: q_palmar_vectors = temp
-        else: q_palmar_vectors = np.concatenate((q_palmar_vectors, temp), axis=1)
-
-    q_dorsal_class = np.array([1] * len(q_dorsal_vectors))
-    q_palmar_class = np.array([0] * len(q_palmar_vectors))
-    
-    test_data = np.vstack((q_dorsal_vectors, q_palmar_vectors))
-    test_labels = np.concatenate((q_dorsal_class, q_palmar_class))
-    
-    if n : test_data = normalize(test_data)
-    return dorsal_vectors, palmar_vectors, test_data, test_labels
-    
-
 if __name__ == "__main__":
     parser = prepare_parser()
     args = parser.parse_args()

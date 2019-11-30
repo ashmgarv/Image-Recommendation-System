@@ -26,6 +26,8 @@ unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
 master_metadata_csv = "../Data/HandInfo.csv"
 
   [default.ppr]
+    [default.ppr.feedback]
+      cache_dir = "../Cache/PPR"
     [default.ppr.classifier]
       frt = 'nmf'
 # k=58 works great for math_method

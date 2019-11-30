@@ -1,75 +1,45 @@
-import numpy as np
-from pathlib import Path
-from tabulate import tabulate
-import argparse
-from dynaconf import settings
-import datetime
 import sys
-import os
+from pathlib import Path
 
 sys.path.append('../')
-import output
-from metric.distance import distance
-from feature_reduction.feature_reduction import reducer
-from utils import get_term_weight_pairs, get_all_vectors, filter_images, get_metadata, get_subject_image_vectors, get_subject_attributes
+from output import write_to_file
+from feedback import ppr
+
+feedback_systems = {'ppr': ppr.ppr_feedback}
 
 
-def prepare_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--subject_id', type=int, required=True)
-    parser.add_argument('-d', '--data_path', type=str)
-    return parser
+def take_feedback_system_input():
+    while True:
+        system = input("Select feedback system: ")
+        if system.strip() not in feedback_systems:
+            print("Inavlid feeback system selected. Choices are: {}".format(
+                feedback_systems.keys()))
+            continue
+        return system.strip()
 
 
-if __name__ == "__main__":
-    t_start = datetime.datetime.now()
-    parser = prepare_parser()
-    args = parser.parse_args()
-    subject_data = {}
-    model = "lbp"
-    reduc_tech = "svd"
-    '''
-        # For every subject, we get the feature vector of each image.
-        # This will give us a Data Matrix for each subject.
-        # Then apply dimensionality reduction for each subject and get 
-            the term weight pairs for each subject (the (K_latent semantic x Features) matrix).
-        # Flatten this matrix to get a 1-D array for each subject.
-        # Now compare the query subjectID (1-D array for which,
-            will already be in the Subject-ReducedFeature matrix formed above) with 
-            all other subjects.
-    '''
-    # This method gives us the feature vectors for each Subject.
-    # Value of K will be equal to minimum number of images for the subjects.
-    subject_data, k, images_per_subject = get_subject_image_vectors(model)
-    subjects_reduced_dim = {}
-    for subject in subject_data.keys():
-        # Apply reducer to get (K_latent semantic x Features) matrix.
-        vectors, eigen_values, weight = reducer(subject_data[subject], k - 1,
-                                                reduc_tech)
-        weight = weight.flatten()
-        subjects_reduced_dim[subject] = weight
+def take_images_input(image_type):
+    while True:
+        image_ids = input(
+            "Enter image ids (space seperated) that you think are {}: ".format(
+                image_type))
+        return image_ids.split(' ')
 
-    result = []
-    # Compare each subject with the query subject.
-    for sub_id in subjects_reduced_dim.keys():
-        delta = distance(subjects_reduced_dim[args.subject_id],
-                         subjects_reduced_dim[sub_id], 2)
-        result.append((sub_id, round(delta, 4), images_per_subject[sub_id]))
 
-    result = sorted(result, key=lambda delta: delta[1])
+def main():
+    relevant_images = []
+    irrelevant_images = []
+    while True:
+        feedback_system = take_feedback_system_input()
+        relevant_images.extend(take_images_input("relevant"))
+        irrelevant_images.extend(take_images_input("irrelevant"))
 
-    per_sub_data_visual = {}
-    m = 3
-    for i in range(0, m + 1):
-        res = get_subject_attributes(result[i][0])
-        sim_index = result[i][1]
-        # ID no    # Attributes # Similarity # ListofImages
-        per_sub_data_visual[result[i][0]] = (res[0], sim_index, result[i][2])
+        new_relevant_images = feedback_systems[feedback_system](
+            relevant_images, irrelevant_images)
 
-    for key in per_sub_data_visual.keys():
-        print("{} -> {}".format(per_sub_data_visual[key][1], per_sub_data_visual[key][0]))
+        print(new_relevant_images)
+        # Output
 
-    output.write_to_file("visualize_task6.html",
-                         "task6-{}.html".format(args.subject_id),
-                         data=per_sub_data_visual.values(),
-                         title="TEST")
+
+if __name__ == '__main__':
+    main()

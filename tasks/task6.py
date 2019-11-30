@@ -6,8 +6,9 @@ from output import write_to_file
 from feedback import ppr
 from dynaconf import settings
 from utils import get_metadata
+from task6_probab import feedback_probab
 
-feedback_systems = {'ppr': ppr.ppr_feedback}
+feedback_systems = {'ppr': ppr.ppr_feedback, 'probab':feedback_probab}
 
 
 def take_feedback_system_input():
@@ -59,7 +60,7 @@ def main():
         feedback_system = take_feedback_system_input()
         relevant_images.extend(take_images_input("relevant", meta))
         irrelevant_images.extend(take_images_input("irrelevant", meta))
-
+        print(relevant_images)
         if not relevant_images and not irrelevant_images:
             print(
                 "No relevant images or irrelevant images provided! Doing nothing."

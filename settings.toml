@@ -24,6 +24,7 @@ metadata_csv = "../Data/phase3_sample_data/labelled_set2.csv"
 unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
 # Path to 11k metadata csv
 master_metadata_csv = "../Data/HandInfo.csv"
+task_five_output = "task_five_output"
 
   [default.ppr]
     [default.ppr.feedback]

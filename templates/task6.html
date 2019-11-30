@@ -34,22 +34,22 @@
           <div class="row overflow-auto" style="max-height: 50vh;" id="relevant-selected">
 {% for image in relevant %}
             <p>{{ image }}</p>
-            <img src="{{ image }}" width="150" height="150" alt="">
+            <img src="{{ image }}" height="150" alt="">
 {% endfor %}
           </div>
           <div class="row overflow-auto" style="max-height: 50vh;" id="irrelevant-selected">
 {% for image in irrelevant %}
             <p>{{ image }}</p>
-            <img src="{{ image }}" width="150" height="150" alt="">
+            <img src="{{ image }}" height="150" alt="">
 {% endfor %}
           </div>
         </div>
         <div class="col">
 
-          <div class="row overflow-auto" style="max-height: 50vh;" id="feedback-results">
+          <div class="row overflow-auto" style="max-height: 100vh;" id="feedback-results">
 {% for image in result %}
             <p>{{ image }}</p>
-            <img src="{{ image }}" width="150" height="150" alt="">
+            <img src="{{ image }}" height="150" alt="">
 {% endfor %}
           </div>
 

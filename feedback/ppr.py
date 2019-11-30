@@ -8,12 +8,18 @@ from sklearn.metrics.pairwise import euclidean_distances
 from scipy.special import softmax
 from pathlib import Path
 
+sys.path.append('../')
 from feature_reduction.feature_reduction import reducer
 from metric import distance, similarity
 from utils import get_metadata, get_term_weight_pairs, get_all_vectors, filter_images
 
+import pickle
+from bson.binary import Binary
+from pymongo import MongoClient
+
 import output
 import time
+from joblib import Memory
 
 POWER_ITR = 'power_iteration'
 MATH = 'math_method'
@@ -29,6 +35,9 @@ mapping = {
     "dark": 3,
 }
 
+CACHE_DIR = Path(settings.path_for(settings.PPR.FEEDBACK.CACHE_DIR))
+CACHE = Memory(str(CACHE_DIR), verbose=1)
+
 
 def math_method(adj_matrix, alpha):
     return np.linalg.inv(
@@ -38,8 +47,7 @@ def math_method(adj_matrix, alpha):
 def power_iteration(adj_matrix, alpha, seed):
     n = 0
     pi_1 = None
-    np.random.seed()
-    pi_2 = np.random.rand(len(seed))
+    pi_2 = np.copy(seed)
 
     while True:
         pi_1 = np.matmul(np.dot(alpha, adj_matrix), pi_2) + np.dot(
@@ -53,8 +61,8 @@ def power_iteration(adj_matrix, alpha, seed):
     return pi_1, n
 
 
-def get_metadata_space(images, unlabelled=False):
-    meta = get_metadata(unlabelled_db=unlabelled)
+def get_metadata_space(images):
+    meta = get_metadata(master_db=True)
     # Mapping between image file path name and the metadata
     meta = {m['path']: m for m in meta}
     space = np.array([[
@@ -66,38 +74,22 @@ def get_metadata_space(images, unlabelled=False):
     return meta, space
 
 
-def get_data_matrix(feature, unlabelled=False):
+def get_data_matrix(feature):
     # Get labelled images
-    images, data = get_all_vectors(feature, unlabelled_db=unlabelled)
+    images, data = get_all_vectors(feature, master_db=True)
+    meta, meta_space = get_metadata_space(images)
+    matrix = np.c_[data, meta_space]
 
-    # Get metadata
-    meta = get_metadata(unlabelled_db=unlabelled)
-    meta = {m['path']: m for m in meta}
-
-    return images, meta, data
+    return images, meta, matrix
 
 
 def prepare_data(k, frt, feature):
     min_max_scaler = MinMaxScaler()
-
-    l_images, l_meta, l_matrix = get_data_matrix(feature)
-    _, l_meta_matrix = get_metadata_space(l_images)
-    l_matrix = np.c_[l_matrix, l_meta_matrix]
-
-    u_images, u_meta, u_matrix = get_data_matrix(feature, unlabelled=True)
-    _, u_meta_matrix = get_metadata_space(u_images, unlabelled=True)
-    u_matrix = np.c_[u_matrix, u_meta_matrix]
-
-    meta = l_meta
-    meta.update(u_meta)
-
-    matrix = min_max_scaler.fit_transform(np.vstack((
-        l_matrix,
-        u_matrix,
-    )))
+    images, meta, matrix = get_data_matrix(feature)
+    matrix = min_max_scaler.fit_transform(matrix)
     matrix, _, _ = reducer(matrix, k, frt)
 
-    return l_images + u_images, meta, matrix
+    return images, meta, matrix
 
 
 def prepare_ppr_graph_from_data(a_matrix, edges):
@@ -112,18 +104,39 @@ def prepare_ppr_graph_from_data(a_matrix, edges):
     return graph
 
 
+def build_data_inv(k_latent, frt, feature, edges, alpha):
+    print("Building inverse matrix")
+    images, _, matrix = prepare_data(k_latent, frt, feature)
+    graph = prepare_ppr_graph_from_data(matrix, edges)
+    return images, math_method(graph, alpha)
+
+
+def build_power_iteration(k_latent, frt, feature, edges, alpha):
+    images, _, matrix = prepare_data(k_latent, frt, feature)
+    graph = prepare_ppr_graph_from_data(matrix, edges)
+    return images, graph
+
+
+build_data_inv = CACHE.cache(build_data_inv)
+build_power_iteration = CACHE.cache(build_power_iteration)
+
+
 def ppr_feedback(relevant_images, irrelevant_images):
-    images, meta, matrix = prepare_data(58, 'nmf', 'moment_inv')
-    graph = prepare_ppr_graph_from_data(matrix, 120)
-    metadata = get_metadata() + get_metadata(unlabelled_db=True)
+    k_latent = 25
+    frt = 'nmf'
+    feature = 'moment'
+    edges = 80
+    alpha = 0.85
 
-    image_meta = {m['path'].split('/')[-1]: m for m in metadata}
-
+    #images, inv = build_data_inv(k_latent, frt, feature, edges, alpha)
+    images, graph = build_power_iteration(k_latent, frt, feature, edges, alpha)
     img_to_label = {}
     for img in relevant_images:
-        img_to_label[image_meta[img]['path']] = 'relevant'
+        img_to_label[Path(settings.path_for(settings.MASTER_DATA_PATH)) /
+                     img] = 'relevant'
     for img in irrelevant_images:
-        img_to_label[image_meta[img]['path']] = 'irrelevant'
+        img_to_label[Path(settings.path_for(settings.MASTER_DATA_PATH)) /
+                     img] = 'irrelevant'
 
     seed = np.zeros(len(images), dtype=np.float32)
     for i, image in enumerate(images):
@@ -137,18 +150,34 @@ def ppr_feedback(relevant_images, irrelevant_images):
 
     seed /= seed.sum()
 
-    #steady_state, _ = power_iteration(graph, 0.55, seed)
-    inv = math_method(graph, 0.55)
-    steady_state = np.dot(inv, (1 - 0.55) * seed)
+    steady_state, _ = power_iteration(graph, 0.55, seed)
+    #steady_state = np.dot(inv, (1 - alpha) * seed)
 
-    result = [(images[i], steady_state[i])
-              for i in np.flip(steady_state.argsort()) if images[i] not in
-              [key for key in img_to_label
-               if img_to_label[key] == 'relevant']][:20]
+    result = [
+        images[i] for i in np.flip(steady_state.argsort()) if images[i] not in
+        [key for key in img_to_label if img_to_label[key] == 'relevant']
+    ][:20]
 
-    output.write_to_file("task3.html",
-                         "xyz.html",
-                         ranks=result,
-                         keys=list(img_to_label.keys()),
-                         title="TEST")
+    output.write_to_file(
+        "task6.html",
+        "xyz6.html",
+        relevant=[i for i in img_to_label if img_to_label[i] == "relevant"],
+        irrelevant=[
+            i for i in img_to_label if img_to_label[i] == "irrelevant"
+        ],
+        result=result,
+        keys=list(img_to_label.keys()),
+        title="TEST")
 
+
+if __name__ == '__main__':
+    relevant_images = [
+        'Hand_0007166.jpg', 'Hand_0007168.jpg', 'Hand_0008622.jpg',
+        'Hand_0008628.jpg'
+    ]
+    irrelevant_images = [
+        'Hand_0009376.jpg', 'Hand_0000902.jpg', 'Hand_0011283.jpg',
+        'Hand_0008014.jpg'
+    ]
+
+    ppr_feedback(relevant_images, irrelevant_images)

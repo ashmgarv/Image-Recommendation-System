@@ -10,7 +10,7 @@ query_database = "query_db"
 # Path to the dataset
 data_path = "../Data/phase3_sample_data/Labelled/Set2"
 # Path to unlabled dataset
-unlabeled_data_path = "../Data/phase3_sample_data/Unlabelled/Set 2"
+unlabeled_data_path = "../Data/phase3_sample_data/Unlabelled/Set 1"
 # Path to all 11k hands (Task 5 and 6)
 master_data_path = "../Data/Hands/"
 # Path to the output
@@ -21,7 +21,7 @@ template_path = "templates"
 metadata_csv = "../Data/phase3_sample_data/labelled_set2.csv"
 # metadata_csv = "../Data/HandInfo.csv"
 # Path to unlabeled metadata
-unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
+unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set1.csv"
 # Path to 11k metadata csv
 master_metadata_csv = "../Data/HandInfo.csv"
 
@@ -40,7 +40,7 @@ master_metadata_csv = "../Data/HandInfo.csv"
       ignore_metadata = false
 
   [default.svm.classifier]
-    k = 20
+    k = 10
     frt = 'nmf'
     model = 'moment'
 

@@ -227,12 +227,7 @@ def svm_driver(args, evaluate=False):
     frt = settings.SVM.CLASSIFIER.FRT
     image_paths, pred = run_svm(evaluate, model, k, frt)
     return zip(image_paths, pred)
-
-def svm_driver(args, evaluate=False):
-    image_paths, pred = run_svm(evaluate)
-    return zip(image_paths, pred)
-
-
+    
 classifiers = {
     'ppr': ppr_driver,
     'decision': decision_tree_driver,

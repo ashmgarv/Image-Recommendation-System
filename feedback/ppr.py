@@ -131,12 +131,11 @@ def ppr_feedback(relevant_images, irrelevant_images):
     #images, inv = build_data_inv(k_latent, frt, feature, edges, alpha)
     images, graph = build_power_iteration(k_latent, frt, feature, edges, alpha)
     img_to_label = {}
+    image_path = Path(settings.path_for(settings.MASTER_DATA_PATH))
     for img in relevant_images:
-        img_to_label[Path(settings.path_for(settings.MASTER_DATA_PATH)) /
-                     img] = 'relevant'
+        img_to_label[str((image_path / img).resolve())] = 'relevant'
     for img in irrelevant_images:
-        img_to_label[Path(settings.path_for(settings.MASTER_DATA_PATH)) /
-                     img] = 'irrelevant'
+        img_to_label[str((image_path / img).resolve())] = 'irrelevant'
 
     seed = np.zeros(len(images), dtype=np.float32)
     for i, image in enumerate(images):
@@ -149,13 +148,18 @@ def ppr_feedback(relevant_images, irrelevant_images):
             seed[i] = 0.5
 
     seed /= seed.sum()
+    import pdb
+    pdb.set_trace()
 
     steady_state, _ = power_iteration(graph, 0.55, seed)
     #steady_state = np.dot(inv, (1 - alpha) * seed)
 
     result = [
-        images[i] for i in np.flip(steady_state.argsort()) if images[i] not in
-        [key for key in img_to_label if img_to_label[key] == 'relevant']
+        images[i] for i in np.flip(steady_state.argsort())
+        if images[i] not in [
+            str(Path(key).resolve()) for key in img_to_label
+            if img_to_label[key] == 'relevant'
+        ]
     ][:20]
 
     output.write_to_file(

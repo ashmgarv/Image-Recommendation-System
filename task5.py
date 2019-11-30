@@ -4,147 +4,90 @@ from dynaconf import settings
 import numpy as np
 import time
 from sklearn.metrics.pairwise import euclidean_distances
-
+import output
 import scipy.sparse
 sys.path.append('../')
-from utils import get_all_vectors, get_term_weight_pairs
-from feature_reduction.feature_reduction import reducer
+from utils import get_all_vectors, store_output
 
-
-image_to_index_dict = None
-
-
-def load_data():
-
-    global vecs, index_to_image_dict, image_to_index_dict
-
-    vecs = scipy.sparse.load_npz("images/image_features_sparse.npz")
-    index_to_image_dict = np.load("images/index_to_image_dict.npy").item()
-    image_to_index_dict = np.load("images/image_to_index_dict.npy").item()
-
-
-def generate_hash(planes, input_vec):
-
-    layer_hash = planes.dot(input_vec.transpose())
-
-    hash_list = ["1" if i>0 else "0" for i in layer_hash]
-
-    hash_bit = "".join(hash_list)
-
-    return hash_bit
-
+def get_hash(all_planes, vector):
+    layer_hash = all_planes.dot(vector.transpose())
+    list_of_hashes = ["1" if i>0 else "0" for i in layer_hash]
+    hash = "".join(list_of_hashes)
+    return hash
 
 def get_euclidean_distance(vec1, vec2):
-    print(vec1.shape)
-    print(vec2.shape)
     return euclidean_distances(vec1.reshape(1,-1), vec2.reshape(1,-1))
 
-
-def get_closet_hash(key, keylist):
-
-    distance_dict = {}
-
-    key_array = [float(c) for c in key]
-
-    for kl in keylist:
-
-        hamm_dis = scipy.spatial.distance.hamming(key_array, [float(c) for c in kl])
-
-        distance_dict[kl] = hamm_dis
+def get_nearest_hash(key, k_list):
+    distances = {}
+    main_arr = [float(c) for c in key]
+    for k in k_list:
+        hamming_distance = scipy.spatial.distance.hamming(main_arr, [float(c) for c in k])
+        distances[k] = hamming_distance
+    return sorted(distances.items(), key=lambda item: item[1])
 
 
-    return sorted(distance_dict.items(), key=lambda item: item[1])
-
-
-def get_closet_members(query_vec, layers, all_layers_planes, fetched_keys):
-
-    other_members = []
-
-    for i, layerDict in enumerate(layers):
-
-        key = generate_hash(all_layers_planes[i], query_vec)
-
-        allkeys = list(layerDict.keys())
-
-        if key in allkeys:
-            
-            allkeys.remove(key)
-
-        otherkeys = [ke for ke in allkeys if ke not in fetched_keys]
-
-        #find the closet key
-        closet_key = get_closet_hash(key, otherkeys)[0][0]
-
-        other_members += layerDict[closet_key]
-
-        fetched_keys.append(closet_key)
-
-    return other_members, fetched_keys
-
-
-
-def lsh_index(input_index, input_vec, layers, all_layers_planes, images):
-
-    for i, layerDict in enumerate(layers):
-
-        key = generate_hash(all_layers_planes[i], input_vec)
-
-        if key not in layerDict:
-
-            layerDict[key] = []
-
-        layerDict[key].append(images[i])
-
-
-def lsh_query(query_vec, t, layers, all_layers_planes,data_matrix,images):
-
+def get_nearest_members(query, layers, planes_per_layer, retreived_keys):
     members = []
+    for i, layer in enumerate(layers):
+        key = get_hash(planes_per_layer[i], query)
+        all_keys = list(layer.keys())
 
-    result_dict = {}
+        if key in all_keys:
+            all_keys.remove(key)
+        more_keys = [ks for ks in all_keys if ks not in retreived_keys]
 
-    fetched_keys = []
-
-    for i, layerDict in enumerate(layers):
-
-        key = generate_hash(all_layers_planes[i], query_vec)
-
-        if key in layerDict:
-
-            members += layerDict[key]
-
-            fetched_keys.append(key)
+        #retrieve closet key
+        closet_key = get_nearest_hash(key, more_keys)[0][0]
+        members += layer[closet_key]
+        retreived_keys.append(closet_key)
+    return members, retreived_keys
 
 
-    all_members = len(members)
+#To perform the lsh indexing
+def perform_lsh(input_vector, layers, planes_per_layer, images):
+    for i, layer in enumerate(layers):
+        key = get_hash(planes_per_layer[i], input_vector)
+
+        if key not in layer:
+            layer[key] = []
+        layer[key].append(images[i])
+
+
+def query_relevant_images(query_vec, t, layers, planes_per_layer,data_matrix,images):
+    members = []
+    final_dictionary = {}
+    retreived_keys = []
+
+    for index in range(len(layers)):
+        key = get_hash(planes_per_layer[index], query_vec)
+        if key in layers[index]:
+            members += layers[index][key]
+            retreived_keys.append(key)
+
+    member_count = len(members)
     members = list(set(members))
-    unique_members = len(members)
+    unique_member_count = len(members)
 
     
-    while unique_members < t:
-
-        closet_members, fetched_keys = get_closet_members(query_vec, layers, all_layers_planes, fetched_keys)
-
+    while unique_member_count < t:
+        closet_members, retreived_keys = get_nearest_members(query_vec, layers, planes_per_layer, retreived_keys)
         members += closet_members
 
-        #re-calculate the number of candidate members
-
-        all_members = len(members)
+        #Count the number of candidate members
+        member_count = len(members)
         members = list(set(members))
-        unique_members = len(members)
+        unique_member_count = len(members)
+
+    for cur_member in members:
+        idx  = images.index(cur_member)
+        member_vector = data_matrix[idx]
+        distance = get_euclidean_distance(member_vector, query_vec)
+        final_dictionary[cur_member] = distance
 
 
-    for member in members:
-        index  = images.index(member)
-        member_vec = data_matrix[index]
-
-        euc_dis = get_euclidean_distance(member_vec, query_vec)
-
-        result_dict[member] = euc_dis
-
-
-    sorted_dict = sorted(result_dict.items(), key=lambda item: item[1])
-
-    return sorted_dict[:t], all_members, unique_members
+    final_sorted = sorted(final_dictionary.items(), key=lambda item: item[1])
+    return final_sorted[:t], member_count, unique_member_count
 
 def prepare_parser():
     parser = argparse.ArgumentParser()
@@ -154,9 +97,6 @@ def prepare_parser():
 
 
 if __name__ == "__main__":
-
-    #input for number of layers and number of hash functions per layer
-
     parser = prepare_parser()
     args = parser.parse_args()
 
@@ -167,66 +107,57 @@ if __name__ == "__main__":
     k = args.hashes
 
     #load the object-feature matrix and data 
-    images, data_matrix = get_all_vectors('hog')
+    images, data_matrix = get_all_vectors('moment', master_db=True)
     
     data_matrix_shape = data_matrix.shape[1]
-    #vec_size = vecs.shape[1]
-
-    #object to store hash values of all layers
-
     layers = [{} for _ in range(l)]
 
-    # generate hyperplanes to hash the input points
-
-    all_layers_planes = []
+    planes_per_layer = []
 
     for i in range(l):
-
-        # for every layer generate k hyper planes of the size of the input vector
-
         planes = np.random.randn(k, data_matrix_shape)
-
-        all_layers_planes.append(scipy.sparse.csr_matrix(planes))
+        planes_per_layer.append(scipy.sparse.csr_matrix(planes))
     
-    #index all the input points
-
+    #index all points
     for i in range(data_matrix.shape[0]):
+        perform_lsh(data_matrix[i], layers, planes_per_layer,images)
 
-        lsh_index(i, data_matrix[i], layers, all_layers_planes,images)
-
-    
-    print ("\nIndex structure created.\n")
-
+    print ("\nIndex structure created.")
     print ("\nTime Taken: ", (time.time()-start))
 
-    print(images)
     #Part b
-    
     query = input("\nEnter the query image id:\n")
+    to_output = query.split('.')[0]
     t = int(input("Enter t:\n"))
 
     if(len(query) <= 16):
-        query = settings.MASTER_DATA_PATH + query
-    #query_index = image_to_index_dict[query]
-    print(query)
-    index = images.index(query)
+        query = settings.MASTER_DATA_PATH + '/' + query
 
+    index = images.index(query)
     query_vec = data_matrix[index]
 
-    results = lsh_query(query_vec, t, layers, all_layers_planes,data_matrix,images)
+    results = query_relevant_images(query_vec, t, layers, planes_per_layer,data_matrix,images)
 
     images = results[0]
-    all_members = results[1]
-    unique_members = results[2]
+    member_count = results[1]
+    unique_member_count = results[2]
 
-    imageids = []
-
+    image_paths = []
+    all_images = []
     for img in images:
+        image_paths.append([img[0].split('/')[-1],img[0]])
+        all_images.append(img[0])
 
-        imageids.append(img[0])
+    print ("\nSimilar Images: ", all_images)
+    print ("Total no. of unique images considered: ", unique_member_count)
+    print ("Total no. of overall images: ", member_count)
 
+    #Store output for task 5
+    store_output(all_images)
 
-    print ("\nImages: ", imageids)
-    print ("Number of unique images considered: ", unique_members)
-    print ("Number of overall images: ", all_members)
+    output.write_to_file("task5.html",
+                         f"task5-{to_output}.html",
+                         key=query,
+                         items=image_paths,
+                         title="Task5")
     

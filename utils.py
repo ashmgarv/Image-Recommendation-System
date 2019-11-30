@@ -1,12 +1,6 @@
-import os
-import shutil
-from subprocess import Popen, PIPE, STDOUT
-import pandas as pd
 from sklearn.cluster import KMeans
 from pymongo import MongoClient
 from dynaconf import settings
-from pathlib import Path
-import csv
 
 from feature import moment, sift, lbp, hog
 from output import print_term_weight_pairs
@@ -177,6 +171,15 @@ def get_term_weight_pairs(components, file_name):
 def get_centroid(matrix):
     km = KMeans(n_clusters=1).fit(matrix)
     return km.cluster_centers_.flatten()
+
+def store_output(images):
+    client = MongoClient(host=settings.HOST,
+                         port=settings.PORT,
+                         username=settings.USERNAME,
+                         password=settings.PASSWORD)
+    collection = client[settings.DATABASE][settings.TASK_FIVE_OUTPUT]
+    for image in images:
+        collection.insert_one({'path':image})
 
 def get_negative_label(label):
     negative_label_map = {

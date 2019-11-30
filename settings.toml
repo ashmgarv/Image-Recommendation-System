@@ -12,7 +12,7 @@ data_path = "../Data/Hands"
 # Path to unlabled dataset
 unlabeled_data_path = "../Data/phase3_sample_data/Unlabelled/Set 2"
 # Path to all 11k hands (Task 5 and 6)
-master_data_path = "C:\\Users\\Yash\\Desktop\\Data\\"
+master_data_path = "/Users/ashmwalia/Documents/Data/Hands"
 # Path to the output
 output_path = "../Outputs/"
 # Path to templates
@@ -25,6 +25,7 @@ unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
 # Path to 11k metadata csv
 master_metadata_csv = "../Data/HandInfo.csv"
 
+task_five_output = "task_five_output"
 
   [default.ppr]
     [default.ppr.classifier]

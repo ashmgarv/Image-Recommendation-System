@@ -145,6 +145,20 @@ class PreparePPRData(object):
         return l_images, u_images, l_meta, u_meta, r_l_matrix, r_u_matrix
 
 
+def get_metadata_space(images, unlabelled_db=False):
+    meta = utils.get_metadata(unlabelled_db=unlabelled_db)
+    # Mapping between image file path name and the metadata
+    meta = {m['path']: m for m in meta}
+    space = np.array([[
+        meta[i]['age'], PreparePPRData.mapping[meta[i]['gender']],
+        PreparePPRData.mapping[meta[i]['skinColor']],
+        PreparePPRData.mapping[meta[i]["accessories"]], meta[i]["nailPolish"],
+        meta[i]["irregularities"]
+    ] for i in images])
+
+    return meta, space
+
+
 def ppr_driver(args, evaluate=False):
     l_images, u_images, l_meta, u_meta, l_matrix, u_matrix = PreparePPRData.prepare_data(
         args.model, args.k_latent_semantics, args.frt, args.ignore_metadata)
@@ -185,11 +199,17 @@ def ppr_driver(args, evaluate=False):
 
 
 def decision_tree_driver(args, evaluate=False):
-    images, data_matrix = utils.get_all_vectors('moment')
+    images, data_matrix = utils.get_all_vectors('moment_inv')
+    #l_meta, l_meta_space = get_metadata_space(images)
+    #data_matrix = np.c_[data_matrix, l_meta_space]
     # Fetch unlabelled data (as provided in the settings)
-    u_images, u_meta, unlabelled = helper.get_unlabelled_data('moment')
+    u_images, u_meta, unlabelled = helper.get_unlabelled_data('moment_inv')
+    #u_meta, u_meta_space = get_metadata_space(u_images, unlabelled_db=True)
+    #unlabelled = np.c_[unlabelled, u_meta_space]
 
-    matrix, _, _, um = reducer(data_matrix, 30, "nmf", query_vector=unlabelled)
+    #matrix, _, _, um = reducer(data_matrix, 30, "nmf", query_vector=unlabelled)
+    matrix = data_matrix
+    um = unlabelled
 
     l_matrix = matrix[:len(images)]
     u_matrix = um[:len(u_images)]

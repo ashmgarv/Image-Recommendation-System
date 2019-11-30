@@ -69,7 +69,6 @@ def main():
         new_relevant_images = feedback_systems[feedback_system](
             relevant_images, irrelevant_images, images_to_display)
 
-        print(new_relevant_images)
         write_to_file("task6.html",
                       "task6-{}.html".format(feedback_system),
                       relevant=relevant_images,

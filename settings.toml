@@ -37,6 +37,11 @@ master_metadata_csv = "../Data/HandInfo.csv"
 # ignoring metadata gives good results for set2 data and power iteration
       ignore_metadata = false
 
+  [default.svm.classifier]
+    k = 20
+    frt = 'nmf'
+    model = 'moment'
+
 # The feature models
   [default.sift]
   # The colletion to store sift data

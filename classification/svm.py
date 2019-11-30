@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from dynaconf import settings
 import numpy as np
 import sys
-from svm_train import SVM
+from .svm_train import SVM
 
 sys.path.append('../')
 from utils import get_all_vectors, filter_images
@@ -49,18 +49,12 @@ def run_svm(evaluate, model='lbp', k=30, frt='pca'):
     train_data, train_labels = build_labelled(model)
     test_data, test_labels, test_paths = build_unlabelled(model)
     labelled_vectors, _, _, unlabelled_vectors  = reducer(train_data, k, frt, query_vector=test_data)
-
     labelled_vectors *= 2
     unlabelled_vectors *= 2
-
     svclassifier = SVM()
     svclassifier.fit(labelled_vectors, train_labels)
     y_pred = svclassifier.predict(unlabelled_vectors)
     if evaluate:
+        print(model,k,frt)
         print(classification_report(test_labels,y_pred))
     return test_paths, y_pred
-
-model = 'moment'
-k = 20
-frt = 'nmf'
-run_svm(True, model, k, frt)

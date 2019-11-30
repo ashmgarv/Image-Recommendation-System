@@ -219,7 +219,10 @@ def decision_tree_driver(args, evaluate=False):
     return zip(u_images, prediction)
 
 def svm_driver(args, evaluate=False):
-    image_paths, pred = run_svm(evaluate)
+    model = settings.SVM.CLASSIFIER.MODEL
+    k = settings.SVM.CLASSIFIER.K
+    frt = settings.SVM.CLASSIFIER.FRT
+    image_paths, pred = run_svm(evaluate, model, k, frt)
     return zip(image_paths, pred)
 
 classifiers = {

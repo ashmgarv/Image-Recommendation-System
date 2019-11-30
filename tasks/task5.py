@@ -4,10 +4,18 @@ from dynaconf import settings
 import numpy as np
 import time
 from sklearn.metrics.pairwise import euclidean_distances
+from pathlib import Path
+
+sys.path.append('../')
 import output
 import scipy.sparse
-sys.path.append('../')
 from utils import get_all_vectors, store_output
+
+def prepare_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--layers', type=int, required=True)
+    parser.add_argument('-k', '--hashes', type=int, required=True)
+    return parser
 
 def get_hash(all_planes, vector):
     layer_hash = all_planes.dot(vector.transpose())
@@ -90,12 +98,6 @@ def query_relevant_images(query_vec, t, layers, planes_per_layer,data_matrix,ima
     final_sorted = sorted(final_dictionary.items(), key=lambda item: item[1])
     return final_sorted[:t], member_count, unique_member_count
 
-def prepare_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--layers', type=int, required=True)
-    parser.add_argument('-k', '--hashes', type=int, required=True)
-    return parser
-
 
 if __name__ == "__main__":
     parser = prepare_parser()
@@ -135,8 +137,9 @@ if __name__ == "__main__":
     to_output = query.split('.')[0]
     t = int(input("Enter t:\n"))
 
-    if(len(query) <= 16):
-        query = settings.MASTER_DATA_PATH + '/' + query
+    data_path = Path(settings.path_for(settings.MASTER_DATA_PATH)).resolve()
+
+    query = str(data_path / query)
 
     index = images.index(query)
     query_vec = data_matrix[index]
@@ -153,7 +156,6 @@ if __name__ == "__main__":
         image_paths.append([img[0].split('/')[-1],img[0]])
         all_images.append(img[0])
 
-    print ("\nSimilar Images: ", all_images)
     print ("Total no. of unique images considered: ", unique_member_count)
     print ("Total no. of overall images: ", member_count)
 

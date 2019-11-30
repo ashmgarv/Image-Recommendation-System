@@ -45,13 +45,14 @@ def get_nearest_members(query, layers, planes_per_layer, retreived_keys):
 
 
 #To perform the lsh indexing
-def perform_lsh(input_vector, layers, planes_per_layer, images):
+def perform_lsh(inp_index, input_vector, layers, planes_per_layer, images):
+    #Iterate over each layer
     for i, layer in enumerate(layers):
         key = get_hash(planes_per_layer[i], input_vector)
 
         if key not in layer:
             layer[key] = []
-        layer[key].append(images[i])
+        layer[key].append(images[inp_index])
 
 
 def query_relevant_images(query_vec, t, layers, planes_per_layer,data_matrix,images):
@@ -110,17 +111,21 @@ if __name__ == "__main__":
     images, data_matrix = get_all_vectors('moment', master_db=True)
     
     data_matrix_shape = data_matrix.shape[1]
+
     layers = [{} for _ in range(l)]
 
     planes_per_layer = []
 
     for i in range(l):
+        #Generate normally distributed planes
         planes = np.random.randn(k, data_matrix_shape)
+
+        #Generating compressed sparsed row matrices
         planes_per_layer.append(scipy.sparse.csr_matrix(planes))
     
     #index all points
     for i in range(data_matrix.shape[0]):
-        perform_lsh(data_matrix[i], layers, planes_per_layer,images)
+        perform_lsh(i, data_matrix[i], layers, planes_per_layer,images)
 
     print ("\nIndex structure created.")
     print ("\nTime Taken: ", (time.time()-start))

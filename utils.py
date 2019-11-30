@@ -178,6 +178,7 @@ def store_output(images):
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     collection = client[settings.DATABASE][settings.TASK_FIVE_OUTPUT]
+    collection.remove({})
     for image in images:
         collection.insert_one({'path':image})
 

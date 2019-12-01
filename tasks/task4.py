@@ -3,11 +3,13 @@ import sys
 from dynaconf import settings
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from pathlib import Path
 
 sys.path.append('../')
 from classification import helper
 from classification.ppr_classifier import ppr_classifier
 from classification.decision_tree import decision_tree
+from classification.svm import run_svm
 from feature_reduction.feature_reduction import reducer
 
 import output
@@ -21,7 +23,7 @@ def prepare_parser():
                         '--classifier',
                         type=str,
                         required=True,
-                        choices=['svd', 'decision', 'ppr'])
+                        choices=['svm', 'decision', 'ppr'])
 
     # Can add classifier related args here, if required
 
@@ -89,7 +91,7 @@ class PreparePPRData(object):
                         ignore_metadata=False):
         min_max_scaler = MinMaxScaler()
 
-        f = None
+        f = {}
         if label:
             label_images = utils.filter_images(label)
             f = {'path': {'$in': label_images}}
@@ -167,10 +169,13 @@ def ppr_driver(args, evaluate=False):
     palmar_symbol = 1.0
 
     if evaluate:
+        master_meta = utils.get_metadata(master_db=True)
+        # Mapping between image file path name and the metadata
+        master_meta = {m['imageName']: m for m in master_meta}
         truth = [
-            dorsal_symbol
-            if u_meta[image]['aspectOfHand'].split(' ')[0] == 'dorsal' else
-            palmar_symbol for image in u_images
+            dorsal_symbol if master_meta[Path(image).name]
+            ['aspectOfHand'].split(' ')[0] == 'dorsal' else palmar_symbol
+            for image in u_images
         ]
 
         print(helper.get_accuracy(truth, predictions))
@@ -184,12 +189,7 @@ def decision_tree_driver(args, evaluate=False):
     # Fetch unlabelled data (as provided in the settings)
     u_images, u_meta, unlabelled = helper.get_unlabelled_data('moment')
 
-    matrix, _, _,um = reducer(
-        data_matrix,
-        30,
-        "pca",
-        query_vector=unlabelled
-    )
+    matrix, _, _, um = reducer(data_matrix, 30, "nmf", query_vector=unlabelled)
 
     l_matrix = matrix[:len(images)]
     u_matrix = um[:len(u_images)]
@@ -208,19 +208,30 @@ def decision_tree_driver(args, evaluate=False):
     palmar_symbol = 1.0
 
     if evaluate:
+        master_meta = utils.get_metadata(master_db=True)
+        # Mapping between image file path name and the metadata
+        master_meta = {m['imageName']: m for m in master_meta}
         truth = [
-            dorsal_symbol
-            if u_meta[image]['aspectOfHand'].split(' ')[0] == 'dorsal' else
-            palmar_symbol for image in u_images
+            dorsal_symbol if master_meta[Path(image).name]
+            ['aspectOfHand'].split(' ')[0] == 'dorsal' else palmar_symbol
+            for image in u_images
         ]
+
         print(helper.get_accuracy(truth, prediction))
 
     return zip(u_images, prediction)
 
-
+def svm_driver(args, evaluate=False):
+    model = settings.SVM.CLASSIFIER.MODEL
+    k = settings.SVM.CLASSIFIER.K
+    frt = settings.SVM.CLASSIFIER.FRT
+    image_paths, pred = run_svm(evaluate, model, k, frt)
+    return zip(image_paths, pred)
+    
 classifiers = {
     'ppr': ppr_driver,
     'decision': decision_tree_driver,
+    'svm': svm_driver
 }
 
 if __name__ == "__main__":

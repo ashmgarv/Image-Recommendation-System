@@ -163,7 +163,7 @@ def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
     #Make predictions
     predictions = np.array(decision_tree(train_data, test_data, 15, 30))
 
-    #Prepare a combine image-vector matrix
+    #Prepare a combined image-distance matrix
     predicted_relevant_indices = np.where(predictions==1.0)[0]
     test_data_images = test_data_images[predicted_relevant_indices]
     test_data = test_data[predicted_relevant_indices,:]

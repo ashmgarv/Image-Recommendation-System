@@ -1,7 +1,11 @@
 #The implementation is referred from https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
 from random import seed
-from .helper import evaluate_algorithm, build_labelled_matrix
-import sys 
+from helper import evaluate_algorithm, build_labelled_matrix
+import sys
+from dynaconf import settings
+from pathlib import Path
+import numpy as np
+from metric.distance import euclidean
 
 sys.path.append('../')
 from utils import get_all_vectors
@@ -130,11 +134,52 @@ def evaluate(dataset):
     print('Scores: %s' % scores)
     print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
 
+#Returns t relevant images
+def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
+    #Get all images from master db
+    master_images, master_vecs = get_all_vectors('moment',master_db=True)
+
+    #Get indices of relevant and irrelevant images
+    relevant_indices = [master_images.index(image) for image in relevant_paths]
+    irrelevant_indices = [master_images.index(image) for image in irrelevant_paths]
+
+    # Get query image vector
+    _, q_img_vector = get_all_vectors('moment', f={'path': query_image}, master_db=True)
+
+    #Prepare relevant and irrelevant matrices
+    relevant_matrix = master_vecs[relevant_indices,:]
+    irrelevant_matrix = master_vecs[irrelevant_indices,:]
+
+    #Prepare test matrix
+    relevant_indices.extend(irrelevant_indices)
+    test_data = np.delete(master_vecs,relevant_indices, 0)
+    test_data_images = np.delete(np.array(master_images),relevant_indices,0)
+
+    #Prepare train data
+    relevant_matrix = np.c_[relevant_matrix,np.full((relevant_matrix.shape[0]),1.0)]
+    irrelevant_matrix = np.c_[irrelevant_matrix,np.full((irrelevant_matrix.shape[0]),0.0)]
+    train_data = np.vstack((relevant_matrix,irrelevant_matrix))
+
+    #Make predictions
+    predictions = np.array(decision_tree(train_data, test_data, 15, 30))
+
+    #Prepare a combine image-vector matrix
+    predicted_relevant_indices = np.where(predictions==1.0)[0]
+    test_data_images = test_data_images[predicted_relevant_indices]
+    test_data = test_data[predicted_relevant_indices,:]
+
+    #Compute euclidean distance from the query image for all relevant images
+    euclidean_distances = euclidean(test_data,np.tile(q_img_vector[0],(test_data.shape[0],1)))
+
+    #Prepare final result
+    result = []
+    for index,res in enumerate(sorted(list(zip(test_data_images,euclidean_distances)),key=lambda a:a[1])):
+        if index < t:
+            result.append(res[0])
+        else:
+            break
+
+    return result
+
 if __name__ == "__main__":
-    images, data_matrix = get_all_vectors('moment')
-    nmf = 30
-    print(data_matrix.shape)
-    vectors, eigen_values, latent_vs_old = reducer(data_matrix, nmf, "nmf")
-    print('nmf = ', nmf)
-    dm = build_labelled_matrix(vectors, images, 'aspectOfHand')
-    evaluate(dm)
+    pass

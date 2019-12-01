@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+<<<<<<< HEAD
   <meta charset="utf-8">
   <title>{{ title }}</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
@@ -84,3 +85,102 @@
     </div>
   </body>
 </html>
+=======
+<meta charset="utf-8"></meta>
+
+<title>{{ title }}</title>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"></link>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+<body style="style">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <!-- RELEVANT IMAGES -->
+
+                <div class="row mt-3" id="relevant-selected">
+                    <div class="card border-secondary">
+                        <div class="card-header bg-dark text-light">Relevant Images</div>
+
+                        <div class="card-body" style="max-height: 50vh; overflow-y: auto;">
+                            <div class="card-columns" style="display: inline;">
+                                {% for image in relevant %}
+
+                                <div class="card" style="width: 32%;">
+                                    <img class="card-img-top" src="{{ image }}">
+
+                                    <div class="card-body bg-light text-dark">
+                                        <p class="card-text">{{ image.split('/')[-1] }}</p>
+                                    </div>
+                                </div>
+
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RELEVANT IMAGES END -->
+                <!-- IRRELEVANT IMAGES -->
+
+                <div class="row mt-3" id="irrelevant-selected">
+                    <div class="card border-secondary">
+                        <div class="card-header bg-dark text-light">Irrelevant Images</div>
+
+                        <div class="card-body" style="max-height: 50vh; overflow-y: auto;">
+                            <div class="card-columns" style="display: inline;">
+                                {% for image in irrelevant %}
+
+                                <div class="card" style="width: 32%;">
+                                    <img class="card-img-top" src="{{ image }}">
+
+                                    <div class="card-body bg-light text-dark">
+                                        <p class="card-text">{{ image.split('/')[-1] }}</p>
+                                    </div>
+                                </div>
+
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IRRELEVANT IMAGES END -->
+            <!-- RESULTS -->
+
+            <div class="col ml-3" style="max-width: fit-content;">
+                <div class="row mt-3" id="feedback-results">
+                    <div class="card border-secondary">
+                        <div class="card-header bg-dark text-light">Results</div>
+
+                        <div class="card-body" style="max-height: 100vh; overflow-y: auto;">
+                            {% for image in result %}
+
+                            <div class="card mx-auto my-2" style="width: 25rem;">
+                                <img class="card-img-top" src="{{ image }}">
+
+                                <div class="card-body bg-light text-dark">
+                                    <p class="card-text">{{ image.split('/')[-1] }}</p>
+                                </div>
+                            </div>
+
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS END -->
+        </div>
+    </div>
+</body>
+
+</html>
+>>>>>>> 683e25c700fbf9a110538276a879711745d9281b

@@ -1,57 +1,123 @@
 import numpy as np
-from pymongo import MongoClient
-from multiprocessing import Pool
-import argparse
-from dynaconf import settings
-from pprint import pprint
-from pathlib import Path
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from scipy.spatial.distance import mahalanobis
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import pandas as pd
+
+
 import sys
-import csv
-
 sys.path.append('../')
-import output
-from utils import get_all_vectors, get_term_weight_pairs
+from utils import get_all_vectors, filter_images
 from feature_reduction.feature_reduction import reducer
+from metric.distance import distance
+from sklearn.neighbors.nearest_centroid import NearestCentroid
+from numpy import dot
+from numpy.linalg import norm
 
 
-def prepare_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', type=str, required=True)
-    parser.add_argument('-k', '--k_latent_semantics', type=int, required=True)
-    parser.add_argument(
-        '-frt', '--feature_reduction_technique', type=str, required=True)
-    return parser
+def generate_vec():
+    #getting dorsal vectors and class
+    dorsal_paths = filter_images('dorsal')
+    _, dorsal_vectors = get_all_vectors(model, f={'path': {'$in': dorsal_paths}})
+    
+    #getting palmar vectors and class
+    palmar_paths = filter_images('palmar')
+    _, palmar_vectors = get_all_vectors(model, f={'path': {'$in': palmar_paths}})
+    
+    #getting dorsal vectors and class
+    dorsal_paths = filter_images('dorsal', unlabelled_db=True)
+    _, u_dorsal_vectors = get_all_vectors(model, f={'path': {'$in': dorsal_paths}}, unlabelled_db=True)
+    dorsal_class = np.array([1] * len(u_dorsal_vectors))
+    
+    #getting palmar vectors and class
+    palmar_paths = filter_images('palmar', unlabelled_db=True)
+    _, u_palmar_vectors = get_all_vectors(model, f={'path': {'$in': palmar_paths}}, unlabelled_db=True)
+    palmar_class = np.array([0] * len(u_palmar_vectors))
+
+    test_data  = np.vstack((u_dorsal_vectors,u_palmar_vectors))
+    test_labels = np.concatenate((dorsal_class,palmar_class))
+ 
+    return dorsal_vectors, palmar_vectors, test_data, test_labels
+
+def mahalano(x, data):
+    """Compute the Mahalanobis Distance between each row of x and the data  
+    x    : vector or matrix of data with, say, p columns.
+    data : ndarray of the distribution from which Mahalanobis distance of each observation of x is to be computed.
+    cov  : covariance matrix (p x p) of the distribution. If None, will be computed from data.
+    """
+    #x_minus_mu = x - np.mean(data)
+    cov = np.cov(data.T)
+    inv_covmat = np.linalg.inv(cov)
+    #left_term = np.dot(x_minus_mu, inv_covmat)
+    #mahal = np.dot(left_term, x_minus_mu.T)
+    mahal = mahalanobis(x,np.mean(data, axis=0),inv_covmat)
+    return mahal
 
 
-if __name__ == '__main__':
-    parser = prepare_parser()
-    args = parser.parse_args()
+model_list = ['moment','hog','sift','moment_inv']
 
-    images, data_matrix = get_all_vectors(args.model)
+k_list = [30]
+results = []
+feature_list = ['pca','nmf','svd']
 
-    # reducer automatically maps feature_reduction_technique to the right function
-    vectors, eigen_values, latent_vs_old = reducer(
-        data_matrix, args.k_latent_semantics, args.feature_reduction_technique)
 
-    file_name = "task1_images_vs_latent_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.k_latent_semantics)
-    get_term_weight_pairs(vectors, file_name)
+#test across model, k,
+for feature_each in feature_list:
+    for model_each in model_list:
+        for k_each in k_list:
 
-    file_name = "task1_latent_vs_features_{}_{}_{}.csv".format(args.model, args.feature_reduction_technique, args.k_latent_semantics)
-    get_term_weight_pairs(latent_vs_old, file_name)
+            print("Running ",feature_each,model_each,k_each)
+            model = model_each
+            k = k_each
+            dorsal_vectors, palmar_vectors, test_data, test_labels = generate_vec()
+            
+            reduced_dorsal_vectors, _, _, _, dorsal_pca = reducer(dorsal_vectors,k_each,feature_each,get_scaler_model=True)
+            if (feature_each == "pca"):
+                dorsal_variance_ratio = dorsal_pca.explained_variance_ratio_
+            reduced_palmar_vectors, _, _, _, palmar_pca = reducer(palmar_vectors,k_each,feature_each,get_scaler_model=True)
+            if (feature_each == "pca"):
+                palmar_variance_ratio = palmar_pca.explained_variance_ratio_
+            reduced_test_data, _, _, _, test_pca = reducer(test_data,k_each,feature_each,get_scaler_model=True)
+            if (feature_each == "pca"):
+                test_variance_ratio = test_pca.explained_variance_ratio_          
+            
+            """
+            reduced_dorsal_vectors, _, _,dorsal_variance_ratio = reducer(dorsal_vectors,k_each,feature_each)
+            reduced_palmar_vectors, _, _, palmar_variance_ratio = reducer(palmar_vectors,k_each,feature_each)
+            reduced_test_data, _, _, test_variance_ratio = reducer(test_data,k_each,feature_each)
+            """
 
-    # Extra Credit
-    # image path with a vector in the latent semantic space
-    data_z = zip(images, vectors)
-    # image path for each latenet semantic in h
-    feature_z = [(idx, images[np.argmax(np.dot(data_matrix, i))]) for idx, i in enumerate(latent_vs_old)]
+            dorsal = []
+            palmar = []
 
-    output.write_to_file("visualize_data_z.html",
-                         "task1-data-z-{}-{}-{}.html".format(args.model, args.feature_reduction_technique, args.k_latent_semantics),
-                         data_z=data_z,
-                         title="TEST")
+            for row in reduced_test_data:
+                dorsalI = 0
+                if (feature_each == "pca"):
+                    row = row * test_variance_ratio
+                for row1 in reduced_dorsal_vectors:
+                    if (feature_each == "pca"):
+                        row1 = row1 * dorsal_variance_ratio
+                    dorsalI = dorsalI + dot(row, row1)/(norm(row)*norm(row1))
+                dorsal.append(dorsalI)
 
-    output.write_to_file("visualize_feat_z.html",
-                         "task1-feat-z-{}-{}-{}.html".format(args.model, args.feature_reduction_technique, args.k_latent_semantics),
-                         feature_z=feature_z,
-                         title="TEST")
+            for row2 in reduced_test_data:
+                if (feature_each == "pca"):
+                    row2 = row2 * test_variance_ratio
+                palmarI = 0
+                for row3 in reduced_palmar_vectors:
+                    if (feature_each == "pca"):
+                        row3 = row3 * palmar_variance_ratio
+                    palmarI = palmarI + dot(row2, row3)/(norm(row2)*norm(row3))
+                palmar.append(palmarI)
 
+            p_label = []
+            j=0
+            for i in range(len(reduced_test_data)):
+                p_label.append(0) if palmar[i] < dorsal[i] else p_label.append(1)
+                if p_label[i]==test_labels[i]:
+                    j = j + 1
+            print((j/len(reduced_test_data))*100) 
+            

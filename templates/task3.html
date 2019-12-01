@@ -1,123 +1,76 @@
 <!doctype html>
-
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>{{ title }}</title>
-  <!-- <style>
-#main, html, body {
-  height: 100%;
-  margin: 0;
-}
-#main {
-  display: flex;
-}
-#keys {
-  height: 100%;
-  width: 50%;
-}
-#rank {
-  height: 100%;
-  overflow: hidden;
-  width: 50%;
-}
-img {
-  width: 350px;
-}
-#rank > div {
-  height: inherit;
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
-  </style> -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-  	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-  	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <meta charset="utf-8"></meta>
+
+    <title>{{ title }}</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"></link>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </head>
 
 <body>
+    <div class="container">
+        <div class="row">
+            <div class="col" style="max-height: 50vh;">
+                <div class="row mt-3">
+                    <div class="card border-secondary">
+                        <div class="card-header bg-dark text-light">Query Images</div>
 
-  <div class="container">
+                        <div class="card-body" style="max-height: 75vh; overflow-y: auto;">
+                            <div class="card-columns" style="display: inline;">
+                                {% for image in keys %}
 
-    <div class="row">
+                                <div class="card" style="width: 32%;">
+                                    <img class="card-img-top" src="{{ image }}">
 
-      <div class="col" style="max-height: 50vh;">
-        <div class="row mt-3">
-          <div class="card border-secondary">
-            <div class="card-header bg-dark text-light">
-              Query Images
-            </div>
-            <div class="card-body" style="max-height: 75vh; overflow-y: auto;">
-              <div class="card-columns" style="display: inline;">
-              {% for image in keys %}
-                <div class="card" style="width: 32%;">
-                  <img class="card-img-top" src="{{ image }}">
-                  <div class="card-body bg-light text-dark">
-                    <p class="card-text">{{ image.split('/')[-1]}}</p>
-                  </div>
-                </div>
-              {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                                    <div class="card-body bg-light text-dark">
+                                        <p class="card-text">{{ image.split('/')[-1]}}</p>
+                                    </div>
+                                </div>
 
-      <div class="col">
-
-        <!-- RESULTS  -->
-        <div class="col ml-3" style="max-width: fit-content;">
-          <div class="row mt-3">
-            <div class="card border-secondary">
-                <div class="card-header bg-dark text-light">
-                Ranks
-              </div>
-              <div class="card-body" style="max-height: 100vh; overflow-y: auto;">
-                {% for image in ranks %}
-                  <div class="card mx-auto my-2" style="width: 25rem;">
-                    <img class="card-img-top" src="{{ image[0] }}">
-                    <div class="card-body bg-light text-dark">
-                      <p class="card-text">{{ image[1]}}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                {% endfor %}
-              </div>
+                </div>
             </div>
-          </div>
+
+            <div class="col">
+                <!-- RESULTS -->
+
+                <div class="col ml-3" style="max-width: fit-content;">
+                    <div class="row mt-3">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-dark text-light">Ranks</div>
+
+                            <div class="card-body" style="max-height: 100vh; overflow-y: auto;">
+                                {% for image in ranks %}
+
+                                <div class="card mx-auto my-2" style="width: 25rem;">
+                                    <img class="card-img-top" src="{{ image[0] }}">
+
+                                    <div class="card-body bg-light text-dark">
+                                        <p class="card-text">{{ image[1]}}</p>
+                                    </div>
+                                </div>
+
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESULTS END -->
+            </div>
         </div>
-        <!-- RESULTS END -->
-
-
-
-      </div>
-
     </div>
-
-
-
-
-    </div>
-
-  </div>
-
-
-  <!-- <section, id="main">
-  <div id="keys">
-{% for key in keys %}
-    <div class="user_images">
-      <img src="{{ key }}" />
-    </div>
-{% endfor %}
-  </div>
-  <div id="rank"><div>
-{% for item in ranks %}
-    <div class="item">
-      <p>{{ item[1] }}, {{ item[0] }}</p>
-      <img src="{{ item[0] }}" />
-    </div>
-{% endfor %}
-    </div></div>
-  </section> -->
 </body>
+
 </html>

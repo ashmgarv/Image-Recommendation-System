@@ -1,49 +1,68 @@
 <!doctype html>
-
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>{{ title }}</title>
-  <style>
-#main {
-  display: flex;
-  flex-direction: row;
-}
-#key {
-  flex-shrink: 1;
-  flex-grow: 1;
-  width: 100%;
-}
-#key img {
-  width: 50%;
-  position: fixed;
-}
-#rank {
-  flex-grow: 2;
-  flex-shrink: 1;
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-}
-#rank img {
-  width: 100%;
-}
-  </style>
+    <meta charset="utf-8"></meta>
+
+    <title>{{ title }}</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"></link>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </head>
 
 <body>
-  <section id="main">
-    <div id="key">
-      <img src="{{ key }}" />
+    <div class="container">
+        <div class="row">
+            <div class="col" style="max-height: 50vh;">
+                <div class="row mt-3">
+                    <div class="card border-secondary">
+                        <div class="card-header bg-dark text-light">Query Images</div>
+
+                        <div class="card-body" style="max-height: 75vh; overflow-y: auto;">
+                            <img class="card-img-top" src="{{ key }}" style="width: 17rem;">
+
+                            <div class="card-body bg-light text-dark">
+                                <p class="card-text">{{ key.split('/')[-1] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <!-- RESULTS -->
+
+                <div class="col ml-3" style="max-width: fit-content;">
+                    <div class="row mt-3">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-dark text-light">Ranks</div>
+
+                            <div class="card-body" style="max-height: 100vh; overflow-y: auto;">
+                                {% for image in items %}
+
+                                <div class="card mx-auto my-2" style="width: 25rem;">
+                                    <img class="card-img-top" src="{{ image[1] }}">
+
+                                    <div class="card-body bg-light text-dark">
+                                        <p class="card-text">{{ image[1].split('/')[-1] }}</p>
+                                    </div>
+                                </div>
+
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESULTS END -->
+            </div>
+        </div>
     </div>
-  <div id="rank">
-{% for item in items %}
-    <div class="item">
-      <p>{{ item[0] }}</p>
-      <img src="{{ item[1] }}" />
-    </div>
-{% endfor %}
-  </div>
-  </section>
 </body>
+
 </html>

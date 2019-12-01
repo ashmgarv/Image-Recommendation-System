@@ -1,48 +1,52 @@
 <!doctype html>
-
 <html lang="en">
+
 <head>
-	<meta charset="utf-8">
-	<title>{{ title }}</title>
-	<!-- <style type="text/css">
-	.tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
-	.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
-	.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#f0f0f0;}
-	.tg .tg-buh4{background-color:#f9f9f9;text-align:left;vertical-align:top}
-	.tg .tg-0lax{text-align:left;vertical-align:top}
-	.thumb{width:200px}
-	</style> -->
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-  	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-  	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <meta charset="utf-8"></meta>
+
+    <title>{{ title }}</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"></link>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </head>
 
 <body>
-	<div class="container mt-3">
-		<div class="row">
-			<table class="table table-bordered">
+    <div class="container mt-3">
+        <div class="row">
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Image</th>
 
-				<thead class="thead-dark">
-					<tr>
-						<th>Image</th>
-						<th>Path</th>
-						<th>Label</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					{% for item in predictions %}
-					<tr>
-						<th><img class="thumb" src="{{ item[0] }}" style="width: 12rem;"></th>
-						<td>{{ item[0] }}</td>
-						<th>{{ item[1] }}</th>
-					</tr>
-					{% endfor %}
-				</tbody>
+                        <th>Path</th>
 
-			</table>
-		</div>
-	</div>
+                        <th>Label</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in predictions %}
+
+                    <tr>
+                        <th>
+                            <img class="thumb" src="{{ item[0] }}" style="width: 12rem;">
+                        </th>
+
+                        <td>{{ item[0] }}</td>
+
+                        <th>{{ item[1] }}</th>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
+
 </html>

@@ -1,0 +1,49 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <style>
+#main {
+  display: flex;
+  flex-direction: row;
+}
+#key {
+  flex-shrink: 1;
+  flex-grow: 1;
+  width: 100%;
+}
+#key img {
+  width: 50%;
+  position: fixed;
+}
+#rank {
+  flex-grow: 2;
+  flex-shrink: 1;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+#rank img {
+  width: 100%;
+}
+  </style>
+</head>
+
+<body>
+  <section id="main">
+    <div id="key">
+      <img src="{{ key }}" />
+    </div>
+  <div id="rank">
+{% for item in items %}
+    <div class="item">
+      <p>{{ item[0] }}</p>
+      <img src="{{ item[1] }}" />
+    </div>
+{% endfor %}
+  </div>
+  </section>
+</body>
+</html>

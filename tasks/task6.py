@@ -3,11 +3,11 @@ from pathlib import Path
 
 sys.path.append('../')
 from output import write_to_file
-from feedback import ppr
+from feedback import ppr,svm
 from dynaconf import settings
 from utils import get_metadata
 
-feedback_systems = {'ppr': ppr.ppr_feedback}
+feedback_systems = {'ppr': ppr.ppr_feedback, 'svm': svm.svm_feedback}
 
 
 def take_feedback_system_input():

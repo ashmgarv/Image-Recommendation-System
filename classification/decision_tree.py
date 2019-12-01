@@ -163,10 +163,12 @@ def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
     #Make predictions
     predictions = np.array(decision_tree(train_data, test_data, 15, 30))
 
-    #Prepare a combined image-distance matrix
+    #Get indices for images classified images as relevant
     predicted_relevant_indices = np.where(predictions==1.0)[0]
-    test_data_images = test_data_images[predicted_relevant_indices]
-    test_data = test_data[predicted_relevant_indices,:]
+
+    #Combine train data and predicted-relevant data indices
+    test_data_images = np.append(test_data_images[predicted_relevant_indices],np.array(master_images)[relevant_indices])
+    test_data = np.vstack((test_data[predicted_relevant_indices,:],train_data[:,:-1]))
 
     #Compute euclidean distance from the query image for all relevant images
     euclidean_distances = euclidean(test_data,np.tile(q_img_vector[0],(test_data.shape[0],1)))
@@ -182,4 +184,13 @@ def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
     return result
 
 if __name__ == "__main__":
-    pass
+    path = str(Path(settings.path_for(settings.MASTER_DATA_PATH)).resolve())
+    relevant_images = [
+        path + '/' + 'Hand_0007166.jpg', path + '/' + 'Hand_0007168.jpg', path + '/' + 'Hand_0008622.jpg',
+        path + '/' + 'Hand_0008628.jpg'
+    ]
+    irrelevant_images = [
+        path + '/' + 'Hand_0009376.jpg', path + '/' + 'Hand_0000902.jpg', path + '/' + 'Hand_0011283.jpg',
+        path + '/' + 'Hand_0008014.jpg'
+    ]
+    print(decision_tree_feedback(relevant_images,irrelevant_images,8,path + '/' + 'Hand_0000674.jpg'))

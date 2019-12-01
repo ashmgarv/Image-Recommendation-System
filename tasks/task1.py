@@ -74,6 +74,8 @@ for feature_each in feature_list:
             k = k_each
             dorsal_vectors, palmar_vectors, test_data, test_labels = generate_vec()
             
+            print(dorsal_vectors.shape)
+
             reduced_dorsal_vectors, _, _, _, dorsal_pca = reducer(dorsal_vectors,k_each,feature_each,get_scaler_model=True)
             if (feature_each == "pca"):
                 dorsal_variance_ratio = dorsal_pca.explained_variance_ratio_

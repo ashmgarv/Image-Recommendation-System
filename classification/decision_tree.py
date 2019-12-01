@@ -1,6 +1,6 @@
 #The implementation is referred from https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
 from random import seed
-from helper import evaluate_algorithm, build_labelled_matrix
+from .helper import evaluate_algorithm, build_labelled_matrix
 import sys
 from dynaconf import settings
 from pathlib import Path

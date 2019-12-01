@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from dynaconf import settings
 
 import argparse
 import sys
@@ -61,10 +62,10 @@ if __name__ == "__main__":
     k_each = args.Features
             
     # On extensive testing, the best feature extraction model was found out to be SIFT
-    model = "sift"
+    model = settings.TASK1_CONFIG.MODEL
 
     # On extensive testing, the best feature reduction technique was founf out to be PCA
-    feature = "pca"
+    feature = settings.TASK1_CONFIG.FRT
 
     # Generating the vectors for Dorsal Labelled, Palmar labelled and the test vectors
     # Also fetching the labels of unlabelled images so as to check accuracy later

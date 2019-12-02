@@ -138,13 +138,14 @@ def evaluate(dataset):
 def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
     #Get all images from master db
     master_images, master_vecs = get_all_vectors('moment',master_db=True)
+    master_vecs, _, _ = reducer(master_vecs, 30, "nmf")
 
     #Get indices of relevant and irrelevant images
     relevant_indices = [master_images.index(image) for image in relevant_paths]
     irrelevant_indices = [master_images.index(image) for image in irrelevant_paths]
 
     # Get query image vector
-    _, q_img_vector = get_all_vectors('moment', f={'path': query_image}, master_db=True)
+    q_img_vector = master_vecs[master_images.index(query_image),:]
 
     #Prepare relevant and irrelevant matrices
     relevant_matrix = master_vecs[relevant_indices,:]

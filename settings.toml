@@ -42,6 +42,11 @@ task_five_output = "task_five_output"
 # ignoring metadata gives good results for set2 data and power iteration
       ignore_metadata = false
 
+  [default.decision.classifier]
+    model = 'moment_inv'
+    max_depth = 15
+    min_size = 30
+
   [default.svm.classifier]
     k = 10
     frt = 'nmf'

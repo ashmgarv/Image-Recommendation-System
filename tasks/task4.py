@@ -49,8 +49,15 @@ def prepare_parser():
                         default=settings.PPR.CLASSIFIER.IGNORE_METADATA)
 
     # Decision Tree options
-    parser.add_argument('-d', '--max-depth', type=int)
-    parser.add_argument('-s', '--max-size', type=int)
+    parser.add_argument('--decision-max-depth',
+                        type=int,
+                        default=settings.DECISION.CLASSIFIER.MAX_DEPTH)
+    parser.add_argument('--decision-min-size',
+                        type=int,
+                        default=settings.DECISION.CLASSIFIER.MIN_SIZE)
+    parser.add_argument('--decision-model',
+                        type=str,
+                        default=settings.DECISION.CLASSIFIER.MODEL)
 
     return parser
 
@@ -185,11 +192,14 @@ def ppr_driver(args, evaluate=False):
 
 
 def decision_tree_driver(args, evaluate=False):
-    images, data_matrix = utils.get_all_vectors('moment')
+    images, data_matrix = utils.get_all_vectors(args.decision_model)
     # Fetch unlabelled data (as provided in the settings)
-    u_images, u_meta, unlabelled = helper.get_unlabelled_data('moment')
+    u_images, u_meta, unlabelled = helper.get_unlabelled_data(
+        args.decision_model)
 
-    matrix, _, _, um = reducer(data_matrix, 30, "nmf", query_vector=unlabelled)
+    #matrix, _, _, um = reducer(data_matrix, 30, "nmf", query_vector=unlabelled)
+    matrix = data_matrix
+    um = unlabelled
 
     l_matrix = matrix[:len(images)]
     u_matrix = um[:len(u_images)]
@@ -199,8 +209,8 @@ def decision_tree_driver(args, evaluate=False):
     # prepare test data
     query = helper.prepare_matrix_for_evaluation(u_matrix)
 
-    max_depth = 15
-    min_size = 30
+    max_depth = args.decision_max_depth
+    min_size = args.decision_min_size
 
     prediction = decision_tree(dm, query, max_depth, min_size)
 
@@ -221,13 +231,15 @@ def decision_tree_driver(args, evaluate=False):
 
     return zip(u_images, prediction)
 
+
 def svm_driver(args, evaluate=False):
     model = settings.SVM.CLASSIFIER.MODEL
     k = settings.SVM.CLASSIFIER.K
     frt = settings.SVM.CLASSIFIER.FRT
     image_paths, pred = run_svm(evaluate, model, k, frt)
     return zip(image_paths, pred)
-    
+
+
 classifiers = {
     'ppr': ppr_driver,
     'decision': decision_tree_driver,

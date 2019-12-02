@@ -172,15 +172,17 @@ def get_centroid(matrix):
     km = KMeans(n_clusters=1).fit(matrix)
     return km.cluster_centers_.flatten()
 
-def store_output(images):
+def store_output(query, images):
     client = MongoClient(host=settings.HOST,
                          port=settings.PORT,
                          username=settings.USERNAME,
                          password=settings.PASSWORD)
     collection = client[settings.DATABASE][settings.TASK_FIVE_OUTPUT]
     collection.remove({})
-    for image in images:
-        collection.insert_one({'path':image})
+    collection.insert_one({
+        'query': query,
+        'results': images
+    })
 
 def get_negative_label(label):
     negative_label_map = {

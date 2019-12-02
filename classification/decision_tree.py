@@ -135,9 +135,9 @@ def evaluate(dataset):
     print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
 
 #Returns t relevant images
-def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image):
+def decision_tree_feedback(relevant_paths, irrelevant_paths, t, query_image, prev_results):
     #Get all images from master db
-    master_images, master_vecs = get_all_vectors('moment',master_db=True)
+    master_images, master_vecs = get_all_vectors('moment', {'path': {'$in': prev_results + [query_image]}},master_db=True)
 
     #Get indices of relevant and irrelevant images
     relevant_indices = [master_images.index(image) for image in relevant_paths]

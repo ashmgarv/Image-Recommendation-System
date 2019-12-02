@@ -8,7 +8,7 @@ from utils import get_all_vectors, filter_images
 from feature_reduction.feature_reduction import reducer
 from classification.svm_train import SVM
 
-def svm_feedback(relevant_images, irrelevant_images, images_to_display):
+def svm_feedback(relevant_images, irrelevant_images, images_to_display, query, results):
     if not irrelevant_images:
         print("Please provide irrelevant images set for svm to work properly.")
         return relevant_images
@@ -17,7 +17,7 @@ def svm_feedback(relevant_images, irrelevant_images, images_to_display):
     frt = settings.SVM.CLASSIFIER.FRT
     images_rel, data_matrix_rel = get_all_vectors(model,f={'path': {'$in': relevant_images}},master_db=True)
     images_irel, data_matrix_irel = get_all_vectors(model,f={'path': {'$in': irrelevant_images}},master_db=True)
-    images_test, test_vector = get_all_vectors(model,f={},master_db=True)
+    images_test, test_vector = get_all_vectors(model,f={'path': {'$in': results + [query]}},master_db=True)
     labelled_vectors, _, _, unlabelled_vectors  = reducer(np.vstack((data_matrix_rel,data_matrix_irel)), k, frt, query_vector=test_vector)
     rel_class = np.array([1] * len(data_matrix_rel))
     irel_class = np.array([-1] * len(data_matrix_irel))
@@ -41,9 +41,9 @@ def svm_feedback(relevant_images, irrelevant_images, images_to_display):
     list_img = []
     c=0
     for key,j in sorted_dict:
-        if c<images_to_display:
+        if c<images_to_display - len(irrelevant_images):
             list_img.append(key)
             c+=1
         else:
             break
-    return(list_img)
+    return(list_img + irrelevant_images)

@@ -74,18 +74,21 @@ def get_metadata_space(images):
     return meta, space
 
 
-def get_data_matrix(feature):
+def get_data_matrix(feature, f={}):
     # Get labelled images
-    images, data = get_all_vectors(feature, master_db=True)
+    images, data = get_all_vectors(feature, f=f, master_db=True)
     meta, meta_space = get_metadata_space(images)
     matrix = np.c_[data, meta_space]
 
     return images, meta, matrix
 
 
-def prepare_data(k, frt, feature):
+def prepare_data(k, frt, feature, paths=None):
     min_max_scaler = MinMaxScaler()
-    images, meta, matrix = get_data_matrix(feature)
+    if paths:
+        images, meta, matrix = get_data_matrix(feature, f={'path': {'$in': paths}})
+    else:
+        images, meta, matrix = get_data_matrix(feature)
     matrix = min_max_scaler.fit_transform(matrix)
     matrix, _, _ = reducer(matrix, k, frt)
 
@@ -121,7 +124,7 @@ build_data_inv = CACHE.cache(build_data_inv)
 build_power_iteration = CACHE.cache(build_power_iteration)
 
 
-def ppr_feedback(relevant_images, irrelevant_images, images_to_display):
+def ppr_feedback(relevant_images, irrelevant_images, images_to_display, query, prev_results):
     k_latent = 25
     frt = 'nmf'
     feature = 'moment'
@@ -129,7 +132,11 @@ def ppr_feedback(relevant_images, irrelevant_images, images_to_display):
     alpha = 0.85
 
     #images, inv = build_data_inv(k_latent, frt, feature, edges, alpha)
-    images, graph = build_power_iteration(k_latent, frt, feature, edges, alpha)
+    #images, graph = build_power_iteration(k_latent, frt, feature, edges, alpha)
+
+    images, _, matrix = prepare_data(k_latent, frt, feature, paths=prev_results + [query])
+    graph = prepare_ppr_graph_from_data(matrix, edges)
+
     img_to_label = {}
     for img in relevant_images:
         img_to_label[img] = 'relevant'
@@ -153,7 +160,7 @@ def ppr_feedback(relevant_images, irrelevant_images, images_to_display):
 
     result = [
         images[i] for i in np.flip(steady_state.argsort())
-        if images[i] not in relevant_images
+#        if images[i] not in relevant_images
     ][:images_to_display]
 
     return result

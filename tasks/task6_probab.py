@@ -27,9 +27,12 @@ model = 'moment'
 frt = 'nmf'
 k = 30
 
-def feedback_probab(relevant, irrelevant, t):
+def feedback_probab(relevant, irrelevant, t, query, prev_results):
+    if not relevant:
+        print("Probabilistic model requires relevant images for re-ordering.")
+        return prev_results
     
-    img_all, img_all_vec = get_all_vectors(model,f={},master_db=True)
+    img_all, img_all_vec = get_all_vectors(model,f={'path': {'$in': prev_results + [query]}},master_db=True)
     #f={'path': {'$nin': relevant}}
 
     img_all_vec_red, _, __ = reducer(img_all_vec, k, frt)

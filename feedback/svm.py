@@ -9,6 +9,9 @@ from feature_reduction.feature_reduction import reducer
 from classification.svm_train import SVM
 
 def svm_feedback(relevant_images, irrelevant_images, images_to_display):
+    if not irrelevant_images:
+        print("Please provide irrelevant images set for svm to work properly.")
+        return relevant_images
     model = settings.SVM.CLASSIFIER.MODEL
     k = settings.SVM.CLASSIFIER.K
     frt = settings.SVM.CLASSIFIER.FRT

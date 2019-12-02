@@ -15,6 +15,10 @@ from utils import get_metadata, get_term_weight_pairs, get_all_vectors
 
 import output
 import time
+from joblib import Memory
+
+CACHE_DIR = Path(settings.path_for(settings.PPR.TASK_3.CACHE_DIR))
+CACHE = Memory(str(CACHE_DIR), verbose=1)
 
 mapping = {
     "without_acs": 0,
@@ -66,43 +70,44 @@ def prepare_parser():
     parser.add_argument('--k-latent', default=20, type=int)
     parser.add_argument('--frt', default='pca', type=str)
     parser.add_argument('--alpha', default=0.15, type=float)
+    parser.add_argument('--master', default=False, action='store_true')
     return parser
 
 
-def get_metadata_space(images, unlabelled=False):
-    meta = get_metadata(unlabelled_db=unlabelled)
-    # Mapping between image file path name and the metadata
+def get_full_matrix(feature, unlabelled=False, master=False):
+    # Get labelled images
+    images, data = get_all_vectors(feature,
+                                   unlabelled_db=unlabelled,
+                                   master_db=master)
+
+    # Get metadata
+    meta = get_metadata(unlabelled_db=unlabelled, master_db=master)
     meta = {m['path']: m for m in meta}
-    space = np.array([[
+    meta_space = np.array([[
         meta[i]['age'], mapping[meta[i]['gender']],
         mapping[meta[i]['skinColor']], mapping[meta[i]["accessories"]],
         meta[i]["nailPolish"], meta[i]["irregularities"]
     ] for i in images])
 
-    return meta, space
+    return images, meta, np.c_[data, meta_space]
 
 
-def get_data_matrix(feature, unlabelled=False):
-    # Get labelled images
-    images, data = get_all_vectors(feature, unlabelled_db=unlabelled)
-
-    # Get metadata
-    meta = get_metadata(unlabelled_db=unlabelled)
-    meta = {m['path']: m for m in meta}
-
-    return images, meta, data
-
-
-def prepare_data(k, frt, feature):
+def prepare_data(k, frt, feature, master):
     min_max_scaler = MinMaxScaler()
 
-    l_images, l_meta, l_matrix = get_data_matrix(feature)
-    _, l_meta_matrix = get_metadata_space(l_images)
-    l_matrix = np.c_[l_matrix, l_meta_matrix]
+    if master:
+        images, meta, matrix = get_full_matrix(feature, master=True)
+        matrix = min_max_scaler.fit_transform(matrix)
+        matrix, _, _ = reducer(matrix, k, frt)
 
-    u_images, u_meta, u_matrix = get_data_matrix(feature, unlabelled=True)
-    _, u_meta_matrix = get_metadata_space(u_images, unlabelled=True)
-    u_matrix = np.c_[u_matrix, u_meta_matrix]
+        # Image-Image similarity
+        img_img = 1 / (euclidean_distances(matrix) + 1)
+        np.fill_diagonal(img_img, 0)
+
+        return images, meta, img_img
+
+    l_images, l_meta, l_matrix = get_full_matrix(feature)
+    u_images, u_meta, u_matrix = get_full_matrix(feature, unlabelled=True)
 
     meta = l_meta
     meta.update(u_meta)
@@ -113,8 +118,14 @@ def prepare_data(k, frt, feature):
     )))
     matrix, _, _ = reducer(matrix, k, frt)
 
-    return l_images + u_images, meta, matrix
+    # Image-Image similarity
+    img_img = 1 / (euclidean_distances(matrix) + 1)
+    np.fill_diagonal(img_img, 0)
 
+    return l_images + u_images, meta, img_img
+
+
+prepare_data = CACHE.cache(prepare_data)
 
 if __name__ == "__main__":
     parser = prepare_parser()
@@ -128,37 +139,56 @@ if __name__ == "__main__":
 
     query_images = []
 
-    images, meta, matrix = prepare_data(k_latent_semantics, frt_technique,
-                                        feature)
+    images, meta, img_img = prepare_data(k_latent_semantics, frt_technique,
+                                         feature, args.master)
 
     for image_id in args.image_ids:
+        master_path = Path(settings.path_for(settings.MASTER_DATA_PATH))
         unlabelled_path = Path(settings.path_for(settings.UNLABELED_DATA_PATH))
         labelled_path = Path(settings.path_for(settings.DATA_PATH))
 
-        path = None
-        if (labelled_path / image_id).exists() and \
-           (labelled_path / image_id).is_file():
-            path = (labelled_path / image_id)
-        elif (unlabelled_path / image_id).exists() and \
-             (unlabelled_path / image_id).is_file():
-            path = (unlabelled_path / image_id)
+        if args.master:
+            path = None
+            if (master_path / image_id).exists() and \
+               (master_path / image_id).is_file():
+                path = (master_path / image_id)
+        else:
+            path = None
+            if (labelled_path / image_id).exists() and \
+               (labelled_path / image_id).is_file():
+                path = (labelled_path / image_id)
+            elif (unlabelled_path / image_id).exists() and \
+                 (unlabelled_path / image_id).is_file():
+                path = (unlabelled_path / image_id)
 
         if path is None:
-            raise Exception("Image '{}' not found in '{}' or '{}'".format(
-                image_id, str(unlabelled_path.resolve()),
-                str(labelled_path.resolve())))
+            if args.master:
+                raise Exception("Image '{}' not found in '{}'".format(
+                    image_id, str(master_path.resolve())))
+            else:
+                raise Exception("Image '{}' not found in '{}' or '{}'".format(
+                    image_id, str(unlabelled_path.resolve()),
+                    str(labelled_path.resolve())))
 
         path_str = str(path.resolve())
         if path_str not in meta:
-            raise Exception(
-                "Metadata unavailable for {}. Did you run db_make? Does this image have the metadata in '{}' or '{}'?"
-                .format(path_str, settings.path_for(settings.METADATA_CSV),
-                        settings.path_for(settings.UNLABELED_METADATA_CSV)))
+            if args.master:
+                raise Exception(
+                    "Metadata unavailable for {}. Did you run db_make? Does this image have the metadata in '{}'?"
+                    .format(path_str,
+                            settings.path_for(settings.METADATA_CSV)))
+            else:
+                raise Exception(
+                    "Metadata unavailable for {}. Did you run db_make? Does this image have the metadata in '{}' or '{}'?"
+                    .format(path_str, settings.path_for(settings.METADATA_CSV),
+                            settings.path_for(settings.MASTER_METADATA_CSV)))
         query_images.append(path_str)
-
+    """
     # Image-Image similarity
     img_img = 1 / (euclidean_distances(matrix) + 1)
     np.fill_diagonal(img_img, 0)
+    """
+
     nth = np.partition(img_img, -1 * args.k_edges,
                        axis=1)[:, -1 * args.k_edges]
     # Mask all numbers below nth largest to 0

@@ -24,18 +24,10 @@
                         <div class="card-header bg-dark text-light">Query Images</div>
 
                         <div class="card-body" style="max-height: 75vh; overflow-y: auto;">
-                            <div class="card-columns" style="display: inline;">
-                                {% for image in keys %}
+                            <img class="card-img-top" src="{{ key }}" style="width: 17rem;">
 
-                                <div class="card" style="width: 32%;">
-                                    <img class="card-img-top" src="{{ image }}">
-
-                                    <div class="card-body bg-light text-dark">
-                                        <p class="card-text">{{ image.split('/')[-1]}}</p>
-                                    </div>
-                                </div>
-
-                                {% endfor %}
+                            <div class="card-body bg-light text-dark">
+                                <p class="card-text">{{ key.split('/')[-1] }}</p>
                             </div>
                         </div>
                     </div>
@@ -51,13 +43,13 @@
                             <div class="card-header bg-dark text-light">Ranks</div>
 
                             <div class="card-body" style="max-height: 100vh; overflow-y: auto;">
-                                {% for image in ranks %}
+                                {% for image in items %}
 
                                 <div class="card mx-auto my-2" style="width: 25rem;">
-                                    <img class="card-img-top" src="{{ image[0] }}">
+                                    <img class="card-img-top" src="{{ image[1] }}">
 
                                     <div class="card-body bg-light text-dark">
-                                        <p class="card-text">{{ image[1]}}</p>
+                                        <p class="card-text">{{ image[1].split('/')[-1] }}</p>
                                     </div>
                                 </div>
 

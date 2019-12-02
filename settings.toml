@@ -24,8 +24,11 @@ metadata_csv = "../Data/phase3_sample_data/labelled_set2.csv"
 unlabeled_metadata_csv = "../Data/phase3_sample_data/unlabelled_set2.csv"
 # Path to 11k metadata csv
 master_metadata_csv = "../Data/HandInfo.csv"
+task_five_output = "task_five_output"
 
   [default.ppr]
+    [default.ppr.feedback]
+      cache_dir = "../Cache/PPR"
     [default.ppr.classifier]
       frt = 'nmf'
 # k=58 works great for math_method
@@ -36,6 +39,11 @@ master_metadata_csv = "../Data/HandInfo.csv"
       convergence_method = 'power_iteration'
 # ignoring metadata gives good results for set2 data and power iteration
       ignore_metadata = false
+
+  [default.svm.classifier]
+    k = 10
+    frt = 'nmf'
+    model = 'moment'
 
 # The feature models
   [default.sift]
@@ -85,11 +93,11 @@ master_metadata_csv = "../Data/HandInfo.csv"
 
   [default.lbp]
     collection = 'lbp'
-  
+
   [default.task1_config]
     model = 'sift'
     frt = 'pca'
-  
+
   [default.task2_config]
     model = 'moment'
     max_iter = 500
@@ -102,6 +110,3 @@ master_metadata_csv = "../Data/HandInfo.csv"
     nmf_gamma_max = 2000
     nmf_max_evals = 500
     clfs_directory = '../Outputs/clfs/'
-
-
-

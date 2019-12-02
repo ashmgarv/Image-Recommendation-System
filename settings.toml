@@ -27,8 +27,10 @@ master_metadata_csv = "../Data/HandInfo.csv"
 task_five_output = "task_five_output"
 
   [default.ppr]
+    [default.ppr.task_3]
+      cache_dir = '../Cache/PPR/Task3'
     [default.ppr.feedback]
-      cache_dir = "../Cache/PPR"
+      cache_dir = "../Cache/PPR/Feedback"
     [default.ppr.classifier]
       frt = 'nmf'
 # k=58 works great for math_method

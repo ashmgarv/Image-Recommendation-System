@@ -3,12 +3,13 @@ from pathlib import Path
 
 sys.path.append('../')
 from output import write_to_file
-from feedback import ppr
+from feedback import ppr,svm
 from dynaconf import settings
 from utils import get_metadata
 from task6_probab import feedback_probab
+from classification import decision_tree
 
-feedback_systems = {'ppr': ppr.ppr_feedback, 'probab':feedback_probab}
+feedback_systems = {'ppr': ppr.ppr_feedback, 'svm': svm.svm_feedback, 'dt':decision_tree.decision_tree_feedback, 'probab':feedback_probab}
 
 
 def take_feedback_system_input():
@@ -60,7 +61,6 @@ def main():
         feedback_system = take_feedback_system_input()
         relevant_images.extend(take_images_input("relevant", meta))
         irrelevant_images.extend(take_images_input("irrelevant", meta))
-        print(relevant_images)
         if not relevant_images and not irrelevant_images:
             print(
                 "No relevant images or irrelevant images provided! Doing nothing."
@@ -70,7 +70,6 @@ def main():
         new_relevant_images = feedback_systems[feedback_system](
             relevant_images, irrelevant_images, images_to_display)
 
-        print(new_relevant_images)
         write_to_file("task6.html",
                       "task6-{}.html".format(feedback_system),
                       relevant=relevant_images,

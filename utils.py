@@ -75,7 +75,8 @@ def filter_images(label, unlabelled_db=False, master_db=False):
 
         coll = client[settings.MASTER_DATABASE][settings.IMAGES.METADATA_COLLECTION]
         filtered_names = [row['imageName'] for row in coll.find({column: {'$in': values}, 'imageName': {'$in': all_unlabelled}})]
-        if not filtered_names: raise Exception("master metadata not populated. Run python db_make.py -master")
+        if not filtered_names: 
+            raise Exception("master metadata not populated. Run python db_make.py -master. Could be your unlabelled images folder has image names that are not a subset of 11k hand names.")
 
         coll = client[settings.QUERY_DATABASE][settings.IMAGES.METADATA_COLLECTION]
         filtered_image_paths = [row['path'] for row in coll.find({'imageName': {'$in': filtered_names}})]

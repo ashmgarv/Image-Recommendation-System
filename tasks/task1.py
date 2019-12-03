@@ -49,7 +49,7 @@ def generate_vec():
     palmar_paths = filter_images('palmar')
     _, palmar_vectors = get_all_vectors(model, f={'path': {'$in': palmar_paths}})
     
-    #getting dorsal vectors and class
+    #getting test vectors and their path
     test_data_paths, test_data = get_all_vectors(model, f={}, unlabelled_db=True)
     
     # Return the calculated values

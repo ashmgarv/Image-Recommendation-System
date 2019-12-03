@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import math
 from dynaconf import settings
 
 import argparse
@@ -10,6 +11,26 @@ from feature_reduction.feature_reduction import reducer
 from numpy import dot
 from numpy.linalg import norm
 from output import write_to_file
+
+#Implement code for Cosine Similarity
+def cos_similarity(v1, v2):
+    v1mag = 0
+    v2mag = 0
+    dot_product = 0
+    for indices in v1:
+        v1mag = v1mag + (indices*indices)
+    v1mag = math.sqrt(v1mag)
+    for indices2 in v2:
+        v2mag = v2mag + (indices2*indices2)
+    v2mag = math.sqrt(v2mag)
+    denominator =  v2mag*v1mag
+    
+    #calculate dot product
+    for i in range(len(v1)):
+        dot_product += v1[i] * v2[i]
+    finalcossimilarity = dot_product/denominator
+    return finalcossimilarity
+
 
 # Initiate the argument parses
 def prepare_parser():
@@ -29,27 +50,10 @@ def generate_vec():
     _, palmar_vectors = get_all_vectors(model, f={'path': {'$in': palmar_paths}})
     
     #getting dorsal vectors and class
-    dorsal_paths = filter_images('dorsal', unlabelled_db=True)
-    test_data_dorsal_paths, u_dorsal_vectors = get_all_vectors(model, f={'path': {'$in': dorsal_paths}}, unlabelled_db=True)
-    dorsal_class = np.array([1] * len(u_dorsal_vectors))
+    test_data_paths, test_data = get_all_vectors(model, f={}, unlabelled_db=True)
     
-    #getting palmar vectors and class
-    palmar_paths = filter_images('palmar', unlabelled_db=True)
-    test_data_palmar_paths, u_palmar_vectors = get_all_vectors(model, f={'path': {'$in': palmar_paths}}, unlabelled_db=True)
-    palmar_class = np.array([0] * len(u_palmar_vectors))
-
-    # Stacking all the data together for testing purposes
-    test_data  = np.vstack((u_dorsal_vectors,u_palmar_vectors))
-    
-    # Combine Data Paths of Test Data
-    test_data_paths  = np.concatenate((test_data_dorsal_paths,test_data_palmar_paths))
-    
-
-    # Concatinating Lables of test data to calculate accuracy scores later
-    test_labels = np.concatenate((dorsal_class,palmar_class))
- 
     # Return the calculated values
-    return dorsal_vectors, palmar_vectors, test_data, test_labels, test_data_paths
+    return dorsal_vectors, palmar_vectors, test_data, test_data_paths
 
 
 if __name__ == "__main__":
@@ -69,7 +73,7 @@ if __name__ == "__main__":
 
     # Generating the vectors for Dorsal Labelled, Palmar labelled and the test vectors
     # Also fetching the labels of unlabelled images so as to check accuracy later
-    dorsal_vectors, palmar_vectors, test_data, test_labels, test_data_paths = generate_vec()
+    dorsal_vectors, palmar_vectors, test_data, test_data_paths = generate_vec()
 
     # Applying PCA to Dorsal Images and fetching the 'k' latent semantics 
     reduced_dorsal_vectors, _, _, _, dorsal_pca = reducer(dorsal_vectors,k_each,feature,get_scaler_model=True)
@@ -97,7 +101,8 @@ if __name__ == "__main__":
         row = row * test_variance_ratio
         for row1 in reduced_dorsal_vectors:
             row1 = row1 * dorsal_variance_ratio
-            dorsalI = dorsalI + dot(row, row1)/(norm(row)*norm(row1))
+            dorsalI = dorsalI + cos_similarity(row,row1)
+            #dot(row, row1)/(norm(row)*norm(row1))
         dorsal.append(dorsalI)
 
     # Calculate Cosine similarity with every test image with every palmar image and store them in 'palmar' list
@@ -106,7 +111,8 @@ if __name__ == "__main__":
         palmarI = 0
         for row3 in reduced_palmar_vectors:
             row3 = row3 * palmar_variance_ratio
-            palmarI = palmarI + dot(row2, row3)/(norm(row2)*norm(row3))
+            palmarI = palmarI + cos_similarity(row2,row3)
+            #dot(row2, row3)/(norm(row2)*norm(row3))
         palmar.append(palmarI)
 
     # Calculation of accuracy scores
@@ -115,14 +121,6 @@ if __name__ == "__main__":
     for i in range(len(reduced_test_data)):
         p_label.append(0) if palmar[i] < dorsal[i] else p_label.append(1)
 
-    # Commenting out code that calculates and prints accuracy when we fetch the dorsal/palmar value of images from the DB
-    # We will need this code during report formation so as to calculate and display accracy as per task requirement.
-    # This code is a part of the For loop at line 114 (just above)
-        """
-        if p_label[i]==test_labels[i]:
-            j = j + 1
-    print((j/len(reduced_test_data))*100) 
-    """
     # Change 1 to Dorsal and 0 to Palmar for Visualization purpose
     final_list = []
     final_list = ["Dorsal" if i == 1 else "Palmar" for i in p_label]

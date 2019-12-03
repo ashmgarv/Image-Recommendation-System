@@ -160,7 +160,7 @@ if __name__ == "__main__":
     print ("Total no. of overall images: ", member_count)
 
     #Store output for task 5
-    store_output(all_images)
+    store_output(query, all_images)
 
     output.write_to_file("task5.html",
                          f"task5-{to_output}.html",

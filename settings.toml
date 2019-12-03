@@ -27,8 +27,10 @@ master_metadata_csv = "../Data/HandInfo.csv"
 task_five_output = "task_five_output"
 
   [default.ppr]
+    [default.ppr.task_3]
+      cache_dir = '../Cache/PPR/Task3'
     [default.ppr.feedback]
-      cache_dir = "../Cache/PPR"
+      cache_dir = "../Cache/PPR/Feedback"
     [default.ppr.classifier]
       frt = 'nmf'
 # k=58 works great for math_method
@@ -39,6 +41,11 @@ task_five_output = "task_five_output"
       convergence_method = 'power_iteration'
 # ignoring metadata gives good results for set2 data and power iteration
       ignore_metadata = false
+
+  [default.decision.classifier]
+    model = 'moment_inv'
+    max_depth = 15
+    min_size = 30
 
   [default.svm.classifier]
     k = 10
